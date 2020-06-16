@@ -297,6 +297,7 @@
 // // municipalities.addTo(map);
 
 
+
 /*=============================================================================
 * FILE:   FeminicidiosLocos.js
 * AUTHOR: Giovanni Romero
@@ -336,16 +337,17 @@ const FeminicidiosPackage=(function(){
         let cleanDropdown;
         let addFeminicidiosData;
         let initialize;
+        let makegraph;
 
        /*-----------------------------------------------------------------
         *                  PRIVATE METHODS
         */
         init_variables=function(){
           graph = chart_object;
-          iconURL='https://img.icons8.com/material-rounded/24/000000/female.png';
+          iconURL='https://img.icons8.com/nolan/64/coffin.png';
           womenIcon = L.icon({
             iconUrl:iconURL,
-            iconSize: [16,16],
+            iconSize: [30,30],
           });
           data=JSON.parse(JSON.stringify(countriesGeoJson));
           municipalitiesData=JSON.parse(JSON.stringify(municipalitiesGeoJson));
@@ -415,7 +417,7 @@ const FeminicidiosPackage=(function(){
 
         init_map= function(){
           map = L.map('map').setView([-17.3894997, -66.1567993], 6);
-          L.esri.basemapLayer('Streets').addTo(map);
+          L.esri.basemapLayer('DarkGray').addTo(map);
           init_variables();
 
           // add GeoJSON layer to the map once the file is loaded
@@ -614,11 +616,75 @@ const FeminicidiosPackage=(function(){
               // console.log(point);
             }
           }
+          // ADD THE GRAPH TO THE DATA //
+          makegraph = function(territory){
+            if(territory ==="Nacional"){
+              console.log(chart_object);
+              let national_data = {
+                x: chart_object['fecha'],
+                y: chart_object['muertes'],
+                mode: 'lines+markers',
+                type:'scatter',
+                line: {
+                  color: '#1f3150',
+                  width: 2,
+                  shape: 'hvh'
+                },
+                marker: {
+                  color: '#78be20',
+                  size: 1
+                },
+                showlegend:true
+              };
+
+              let data = [national_data];
+              let layout = {
+                title: {
+                  text:"Feminicidios Nivel Nacional",
+                  font:{
+                    size:30,
+                    color:'#78be20'
+                  }
+                },
+                autosize:true,
+                xaxis: {
+                  title: {
+                    text:"FECHA",
+                    font:{
+                      size:17,
+                      color:'#78be20'
+                    }
+                  },
+                  showgrid: false,
+                  zeroline: false
+
+                },
+                yaxis: {
+                  title: {
+                    text:"FEMINICIDIO",
+                    font:{
+                      size:17,
+                      color:'#78be20'
+                    }
+                  },
+                  showline: false,
+                  showlegend:true,
+                  zeroline: false
+
+                }
+              }
+
+              Plotly.newPlot('graph', data, layout);
+            }
+          };
+
           initialize= function(){
             init_variables();
             init_map();
             init_side();
             addFeminicidiosData();
+            let territory = document.getElementById("departmentList").value;
+            makegraph(territory);
           }
 
           /************************************************************************

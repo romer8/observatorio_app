@@ -4,7 +4,9 @@ from PrevencionTool.models import Victima, Agresor
 import os
 import json
 import csv
-
+import pandas as pd
+import datetime
+import plotly.graph_objs as go
 # Create your views here.
 # def index(request):
 #     return HttpResponse("Hello, world. You're at the polls index.")
@@ -24,15 +26,16 @@ def default_map(request):
     with open(file_path_municipalities) as json_data:
         munipals=json.load(json_data)
 
-    feminicidios_data=getTableVictimaData()
-
+    feminicidios_data2=getTableVictimaData(request)
+    chart_object=getNationalTimeSeries(feminicidios_data2)
     # print(data2)
 
     context={
         "countries":data_dict,
         "departments":depts,
         "munipalities":munipals,
-        "feminicidios_data":feminicidios_data
+        "feminicidios_data":feminicidios_data2,
+        "chart_object": chart_object
     }
     return render(request, 'PrevencionTool/index.html', context)
 
@@ -107,7 +110,7 @@ def feminicidios_data():
             agresor_row.save()
     return
 
-def getTableVictimaData():
+def getTableVictimaData(request):
     feminicidios_data()
     victimas_array=[]
     agresor_array=[]
@@ -158,4 +161,73 @@ def getTableVictimaData():
             'fecha_sentencia':agresores[i].fecha_sentencia
         }
         agresor_array.append(datos_agresor)
+
     return datos
+
+def getNationalTimeSeries(datos):
+    fechas=[]
+    muertes=[]
+    departamentos=[]
+    for x in datos['victimas']:
+        if x['fecha_muerte'] !='No se sabe':
+            count=1
+            # fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y').strftime("%m/%d/%Y"))
+            fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y'))
+            departamentos.append(x['departmento'])
+            muertes.append(count)
+
+    newFeminicidioObject={
+        'fecha_muerte':fechas,
+        # 'departamento': departamentos,
+        'muertes':muertes,
+    }
+    # columns=['fecha_muerte','departamento','muertes']
+    columns=['fecha_muerte','muertes']
+    df=pd.DataFrame(newFeminicidioObject, columns=columns)
+    df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
+    df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
+    # print(df)
+    national_df=df.groupby('fecha_muerte').sum()
+    # national_df=df.groupby('fecha_muerte')['muertes'].sum()
+    print(national_df)
+    # national_df=national_df.to_frame()
+    # national_df2['fecha_muerte'], national_df2 ['muertes'] = zip(national_df['muertes'])
+
+    # print(national_df'fecha_muerte')
+    # n=national_df['fecha_muerte'].to_frame()
+
+    national_json = national_df.to_json(orient='columns')
+    national_json_ob = json.loads(national_json)
+    dates = list(national_json_ob['muertes'].keys())
+    deaths = list(national_json_ob['muertes'].values())
+
+    national_object={
+        'fecha':dates,
+        'muertes':deaths
+    }
+    return national_object
+
+# def plotNationalTimesSeries(dataframe,type):
+#
+#     # times_series=go.Scatter(
+#     #       name=type,
+#     #       x=dataframe['fecha_muerte'],
+#     #       y=dataframe['muertes'],
+#     #       line=dict(
+#     #         color='blue',
+#     #       )
+#     #  )
+#     # layout = go.Layout(
+#     #     title="Feminicidios 2013-2017",
+#     #     xaxis=dict(
+#     #         title='Fecha',
+#     #     ),
+#     #     yaxis=dict(
+#     #         title='Feminicidios',
+#     #     ),
+#     #  )
+#     # chart=go.Figure(data=times_series,layout=layout)
+#     # div=opy.plot(chart_object, auto_open=False, output_type='div')
+#
+#     # fig=px.line(dataframe,x='fecha_muerte',y='muertes')
+#     return chart
