@@ -580,7 +580,7 @@ const FeminicidiosPackage=(function(){
               let long=feminicidiosData.victimas[i].long;
               let point=[];
               let template = '<h3>'+ feminicidiosData.victimas[i].nombre_victima +'</h3>\
-                  <table class="popup-table">\
+                  <table class="table table-hover table-sm table-dark popup-table" id="tableID">\
                     <tr class="popup-table-row">\
                       <th class="popup-table-header"> Año </th>\
                       <td id="value-ano" class="popup-table-data">'+feminicidiosData.victimas[i].ano_muerte+'</td>\
@@ -610,7 +610,7 @@ const FeminicidiosPackage=(function(){
                       <td id="value-agresion_previa" class="popup-table-data">'+feminicidiosData.victimas[i].estado_del_caso+'</td>\
                     </tr>\
                   </table>\
-                  <br><strong>Circusntacias del Feminicidio</strong><br>'+feminicidiosData.victimas[i].circunstancias;
+                  <p><strong>Circunstacias del Feminicidio</strong><p>'+feminicidiosData.victimas[i].circunstancias;
               if(lat != "No se sabe" && long!="No se sabe"){
                 point.push(parseFloat(lat));
                 point.push(parseFloat(long));
