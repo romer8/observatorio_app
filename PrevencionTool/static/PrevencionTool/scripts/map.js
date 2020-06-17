@@ -340,7 +340,7 @@ const FeminicidiosPackage=(function(){
         let makegraph;
         let graph_template;
         let makePieGrap;
-        let grap_pie_template;
+        let graph_pie_template;
 
        /*-----------------------------------------------------------------
         *                  PRIVATE METHODS
@@ -470,6 +470,7 @@ const FeminicidiosPackage=(function(){
                   displayBoundary(department, departmentData);
                   addDropdown(department,"sideSmall",municipalitiesData,"prov");
                   makegraph(department);
+                  makePieGrap(department);
                 }
                 else{
                   console.log('The country selected is undefined ');
@@ -708,6 +709,42 @@ const FeminicidiosPackage=(function(){
               })
             }
           };
+          //Makes the PIE graph for the different departments //
+          graph_pie_template = function (xData, yData, generalTitle){
+            var data = [{
+              type: "pie",
+              values: xData,
+              labels: yData,
+              textinfo: "label+percent",
+              insidetextorientation: "radial"
+            }]
+
+            var layout = [{
+              // height: 700,
+              // width: 700
+            }]
+
+            Plotly.newPlot('piegraph', data, layout)
+          }
+          //Make the function to have teh Ajax call for the function//
+          makePieGrap = function(territory){
+            let requestOb={
+              'territory':territory,
+            }
+
+            $.ajax({
+              type:'GET',
+              url: 'local-pie-graph/',
+              dataType: 'json',
+              data: requestOb,
+              contentType:'application/json',
+              success: function(resp) {
+                console.log("this is the data");
+                console.log(resp);
+                graph_pie_template(resp['muertes'],resp['territory'],`Series de tiempo ${territory}-Feminicidios`)
+              }
+            })
+          }
 
 
           initialize= function(){
@@ -717,6 +754,7 @@ const FeminicidiosPackage=(function(){
             addFeminicidiosData();
             let territory = document.getElementById("departmentList").value;
             makegraph(territory);
+            makePieGrap(territory);
           }
 
           /************************************************************************

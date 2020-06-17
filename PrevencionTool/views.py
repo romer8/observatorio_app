@@ -256,7 +256,73 @@ def localGraphs(request):
     print(depa_object)
     return JsonResponse(depa_object)
 
+def localPieGraphs(request):
+    territory = request.GET['territory']
+    print(territory)
+    datos = getTableVictimaData(request)
+    fechas=[]
+    muertes=[]
+    departamentos=[]
+    provincias = []
+    national_object={}
+    for x in datos['victimas']:
+        if x['fecha_muerte'] !='No se sabe':
+            count=1
+            # fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y').strftime("%m/%d/%Y"))
+            fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y'))
+            departamentos.append(x['departmento'])
+            muertes.append(count)
+            provincias.append(x['provincia'])
 
+    newFeminicidioObject={
+        'fecha_muerte':fechas,
+        'departamento': departamentos,
+        'muertes':muertes,
+        'provincia':provincias,
+    }
+    columns=['fecha_muerte','departamento','provincia','muertes']
+    # columns=['fecha_muerte','muertes']
+    df=pd.DataFrame(newFeminicidioObject, columns=columns)
+    df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
+    df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
+    print(df)
+    if territory =='Nacional':
+        national_df=df.groupby(['departamento'])['muertes'].sum().reset_index()
+        national_json = national_df.to_json(orient='columns')
+        national_json_ob = json.loads(national_json)
+        departamento_list = list(national_json_ob['departamento'].values())
+        deaths = list(national_json_ob['muertes'].values())
+        national_object={
+            'territory':departamento_list,
+            'muertes':deaths
+        }
+    else:
+        print("we are not in national")
+        depa_df = df.loc[df['departamento'] == territory]
+        print(type(depa_df))
+        print(depa_df)
+        depa_df_group=depa_df.groupby(['provincia'])['muertes'].sum().reset_index()
+        print(type(depa_df_group))
+        # depa_df_group2 = depa_df_group[['fecha_muerte','muertes']].copy()
+        # depa_df_group2['fecha_muerte']=depa_df_group['fecha_muerte']
+        # depa_df_group2['muertes']=depa_df_group['muertes']
+        print(depa_df_group)
+        #
+        # print("local graphs groupby")
+        # depa_df = national_df.loc[df['departamento'] == territory]
+        # print(depa_df)
+        depa_json = depa_df_group.to_json(orient='columns')
+        depa_json_ob = json.loads(depa_json)
+        print(depa_json_ob)
+        provincias_list = list(depa_json_ob['provincia'].values())
+        deaths = list(depa_json_ob['muertes'].values())
+
+        national_object={
+            'territory':provincias_list,
+            'muertes':deaths
+        }
+
+    return JsonResponse(national_object)
 
 # def plotNationalTimesSeries(dataframe,type):
 #

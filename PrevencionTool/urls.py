@@ -6,5 +6,6 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.default_map, name='default'),
-    path('local-graph/', views.localGraphs)
+    path('local-graph/', views.localGraphs),
+    path('local-pie-graph/', views.localPieGraphs),
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
