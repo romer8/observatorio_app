@@ -719,10 +719,15 @@ const FeminicidiosPackage=(function(){
               insidetextorientation: "radial"
             }]
 
-            var layout = [{
-              // height: 700,
-              // width: 700
-            }]
+            let layout = {
+              title: {
+                text:generalTitle,
+                font:{
+                  size:20,
+                  color:'#78be20'
+                }
+              },
+            }
 
             Plotly.newPlot('piegraph', data, layout)
           }
