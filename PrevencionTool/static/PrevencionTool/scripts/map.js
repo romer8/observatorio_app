@@ -338,6 +338,9 @@ const FeminicidiosPackage=(function(){
         let addFeminicidiosData;
         let initialize;
         let makegraph;
+        let graph_template;
+        let makePieGrap;
+        let grap_pie_template;
 
        /*-----------------------------------------------------------------
         *                  PRIVATE METHODS
@@ -360,47 +363,47 @@ const FeminicidiosPackage=(function(){
               long:-66.1567993
             },
             {boundary:'La Paz',
-              zoomLevel:14,
+              zoomLevel:12,
               lat:-16.502705,
               long:-68.160786
             },
             {boundary:'Cochabamba',
-              zoomLevel:14,
+              zoomLevel:12,
               lat:-17.413700,
               long:-66.151339
             },
             {boundary:'Santa Cruz',
               lat:-17.813157,
-              zoomLevel:14,
+              zoomLevel:12,
               long:-63.169639
             },
             {boundary:'Tarija',
-              zoomLevel:14,
+              zoomLevel:12,
               lat:-21.519863,
               long:-64.729898
             },
             {boundary:'Potosí',
               lat:-19.578493,
-              zoomLevel:14,
+              zoomLevel:12,
               long:-65.752852
             },
             {boundary:'Oruro',
-              zoomLevel:14,
+              zoomLevel:12,
               lat:-17.973250,
               long:-67.093894
             },
             {boundary:'Beni',
-              zoomLevel:14,
+              zoomLevel:12,
               lat:-14.834720,
               long:-64.901999
             },
             {boundary:'Pando',
-              zoomLevel:14,
+              zoomLevel:12,
               lat:-11.029391,
               long:-68.766984
             },
             {boundary:'Chuquisaca',
-              zoomLevel:14,
+              zoomLevel:12,
               lat:-19.035578,
               long:-65.257393
             },
@@ -466,6 +469,7 @@ const FeminicidiosPackage=(function(){
                   // displayDepartment(department);
                   displayBoundary(department, departmentData);
                   addDropdown(department,"sideSmall",municipalitiesData,"prov");
+                  makegraph(department);
                 }
                 else{
                   console.log('The country selected is undefined ');
@@ -616,67 +620,95 @@ const FeminicidiosPackage=(function(){
               // console.log(point);
             }
           }
+          //MAKE THE GRAPH TEMPLATE FOR IT //
+          graph_template = function(xData, yData, generalTitle){
+
+            let national_data = {
+              x: xData,
+              y: yData,
+              mode: 'markers',
+              type:'scatter',
+              // line: {
+              //   color: '#1f3150',
+              //   width: 2,
+              // },
+              marker: {
+                // color: '#78be20',
+                color: '#1f3150',
+                size: 5
+              },
+              showlegend:true,
+              name:"Feminicidios"
+            };
+
+            let data = [national_data];
+            let layout = {
+              title: {
+                text:generalTitle,
+                font:{
+                  size:30,
+                  color:'#78be20'
+                }
+              },
+              autosize:true,
+              xaxis: {
+                title: {
+                  text:"FECHA",
+                  font:{
+                    size:17,
+                    color:'#78be20'
+                  }
+                },
+                showgrid: false,
+                zeroline: false
+
+              },
+              yaxis: {
+                title: {
+                  text:"FEMINICIDIO",
+                  font:{
+                    size:17,
+                    color:'#78be20'
+                  }
+                },
+                showline: false,
+                showlegend:true,
+                zeroline: false
+
+              }
+            }
+
+            Plotly.newPlot('graph', data, layout);
+
+          }
           // ADD THE GRAPH TO THE DATA //
           makegraph = function(territory){
             if(territory ==="Nacional"){
               console.log(chart_object);
-              let national_data = {
-                x: chart_object['fecha'],
-                y: chart_object['muertes'],
-                mode: 'lines+markers',
-                type:'scatter',
-                line: {
-                  color: '#1f3150',
-                  width: 2,
-                  shape: 'hvh'
-                },
-                marker: {
-                  color: '#78be20',
-                  size: 1
-                },
-                showlegend:true
-              };
+              graph_template(chart_object['fecha'],chart_object['muertes'],"Series de Tiempo Feminicidios Nivel Nacional")
+            }
+            else{
 
-              let data = [national_data];
-              let layout = {
-                title: {
-                  text:"Feminicidios Nivel Nacional",
-                  font:{
-                    size:30,
-                    color:'#78be20'
-                  }
-                },
-                autosize:true,
-                xaxis: {
-                  title: {
-                    text:"FECHA",
-                    font:{
-                      size:17,
-                      color:'#78be20'
-                    }
-                  },
-                  showgrid: false,
-                  zeroline: false
-
-                },
-                yaxis: {
-                  title: {
-                    text:"FEMINICIDIO",
-                    font:{
-                      size:17,
-                      color:'#78be20'
-                    }
-                  },
-                  showline: false,
-                  showlegend:true,
-                  zeroline: false
-
-                }
+              let requestOb={
+                'territory':territory,
               }
 
-              Plotly.newPlot('graph', data, layout);
+              $.ajax({
+                type:'GET',
+                url: 'local-graph/',
+                dataType: 'json',
+                data: requestOb,
+                contentType:'application/json',
+                success: function(resp) {
+                  console.log("this is the data");
+                  console.log(resp);
+                  graph_template(resp['fecha'],resp['muertes'],`Series de tiempo ${territory}-Feminicidios`)
+
+                }
+              })
             }
           };
+
 
           initialize= function(){
             init_variables();
