@@ -746,7 +746,7 @@ const FeminicidiosPackage=(function(){
               success: function(resp) {
                 console.log("this is the data");
                 console.log(resp);
-                graph_pie_template(resp['muertes'],resp['territory'],`Series de tiempo ${territory}-Feminicidios`)
+                graph_pie_template(resp['muertes'],resp['territory'],`Distribucion de Feminicidios-${territory}`)
               }
             })
           }
