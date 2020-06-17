@@ -623,21 +623,28 @@ const FeminicidiosPackage=(function(){
           }
           //MAKE THE GRAPH TEMPLATE FOR IT //
           graph_template = function(xData, yData, generalTitle){
-
+            // let size=[];
+            // yData.forEach(function(x){
+            //   size.push(x*20);
+            // })
+            // let desired_maximum_marker_size = 40;
             let national_data = {
               x: xData,
               y: yData,
-              mode: 'markers',
-              type:'scatter',
+              // mode: 'markers',
+              // type:'scatter',
+              type:'bar',
               // line: {
               //   color: '#1f3150',
               //   width: 2,
               // },
-              marker: {
-                // color: '#78be20',
-                color: '#1f3150',
-                size: 5
-              },
+              // marker: {
+              //   // color: '#78be20',
+              //   color: '#1f3150',
+              //   size:size,
+              //   sizemode: 'area',
+              //   sizeref: 2.0 * Math.max(...size) / (desired_maximum_marker_size**2),
+              // },
               showlegend:true,
               name:"Feminicidios"
             };
