@@ -50,6 +50,8 @@
       width: 100%;
       height: 100%;
       color:white;
+      border-right: 2em solid #78be20;
+
     }
 
     #brand{
@@ -77,6 +79,7 @@
       width: 100%;
       display: flex;
       height: 100%;
+      flex-direction: column;
     }
 
     #content{
@@ -117,12 +120,11 @@
           <img src="{% static 'PrevencionTool/images/feminicidio_logo.png' %}" alt="">
           <p> Visualicidios</p>
         </div>
-        <h3>Selecione Nivel Nacional</h3>
         <div id="sideSmall">
-          <select id='departmentList'> </select> <br>
           <button type="button" id= "boton" class="btn btn-dark">
-            <i class="fa fa-bar-chart" aria-hidden="true"></i>
+            <i class="fa fa-map-marker" aria-hidden="true"></i>
           </button>
+          <select id='departmentList'> </select> <br>
         </div>
         <div id="piegraph">
         </div>
