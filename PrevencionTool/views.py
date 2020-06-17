@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from PrevencionTool.models import Victima, Agresor
 import os
 import json
@@ -206,6 +206,57 @@ def getNationalTimeSeries(datos):
         'muertes':deaths
     }
     return national_object
+def localGraphs(request):
+    territory = request.GET['territory']
+    datos = getTableVictimaData(request)
+    fechas=[]
+    muertes=[]
+    departamentos=[]
+    for x in datos['victimas']:
+        if x['fecha_muerte'] !='No se sabe':
+            count=1
+            # fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y').strftime("%m/%d/%Y"))
+            fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y'))
+            departamentos.append(x['departmento'])
+            muertes.append(count)
+
+    newFeminicidioObject={
+        'fecha_muerte':fechas,
+        'departamento': departamentos,
+        'muertes':muertes,
+    }
+    columns=['fecha_muerte','departamento','muertes']
+    # columns=['fecha_muerte','muertes']
+    df=pd.DataFrame(newFeminicidioObject, columns=columns)
+    df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
+    df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
+    depa_df = df.loc[df['departamento'] == territory]
+    print(type(depa_df))
+    print(depa_df)
+    depa_df_group=depa_df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
+    print(type(depa_df_group))
+    depa_df_group2 = depa_df_group[['fecha_muerte','muertes']].copy()
+    # depa_df_group2['fecha_muerte']=depa_df_group['fecha_muerte']
+    # depa_df_group2['muertes']=depa_df_group['muertes']
+    print(depa_df_group2)
+    #
+    # print("local graphs groupby")
+    # depa_df = national_df.loc[df['departamento'] == territory]
+    # print(depa_df)
+    depa_json = depa_df_group2.to_json(orient='columns')
+    depa_json_ob = json.loads(depa_json)
+    print(depa_json_ob)
+    dates = list(depa_json_ob['fecha_muerte'].values())
+    deaths = list(depa_json_ob['muertes'].values())
+
+    depa_object={
+        'fecha':dates,
+        'muertes':deaths
+    }
+    print(depa_object)
+    return JsonResponse(depa_object)
+
+
 
 # def plotNationalTimesSeries(dataframe,type):
 #
