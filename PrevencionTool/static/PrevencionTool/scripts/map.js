@@ -346,7 +346,7 @@ const FeminicidiosPackage=(function(){
         *                  PRIVATE METHODS
         */
         init_variables=function(){
-          graph = chart_object;
+          // graph = chart_object;
           iconURL='https://img.icons8.com/nolan/64/coffin.png';
           womenIcon = L.icon({
             iconUrl:iconURL,
@@ -420,7 +420,7 @@ const FeminicidiosPackage=(function(){
 
         init_map= function(){
           map = L.map('map').setView([-17.3894997, -66.1567993], 6);
-          L.esri.basemapLayer('DarkGray').addTo(map);
+          L.esri.basemapLayer('Streets').addTo(map);
           init_variables();
 
           // add GeoJSON layer to the map once the file is loaded
@@ -631,13 +631,13 @@ const FeminicidiosPackage=(function(){
             let national_data = {
               x: xData,
               y: yData,
-              // mode: 'markers',
-              // type:'scatter',
-              type:'bar',
-              // line: {
-              //   color: '#1f3150',
-              //   width: 2,
-              // },
+              mode: 'line',
+              type:'scatter',
+              // type:'bar',
+              line: {
+                color: '#1f3150',
+                width: 2,
+              },
               // marker: {
               //   // color: '#78be20',
               //   color: '#1f3150',
@@ -691,11 +691,11 @@ const FeminicidiosPackage=(function(){
           }
           // ADD THE GRAPH TO THE DATA //
           makegraph = function(territory){
-            if(territory ==="Nacional"){
-              console.log(chart_object);
-              graph_template(chart_object['fecha'],chart_object['muertes'],"Series de Tiempo Feminicidios Nivel Nacional")
-            }
-            else{
+            // if(territory ==="Nacional"){
+            //   // console.log(chart_object);
+            //   graph_template(chart_object['fecha'],chart_object['muertes'],"Series de Tiempo Feminicidios Nivel Nacional")
+            // }
+            // else{
 
               let requestOb={
                 'territory':territory,
@@ -714,7 +714,7 @@ const FeminicidiosPackage=(function(){
 
                 }
               })
-            }
+            // }
           };
           //Makes the PIE graph for the different departments //
           graph_pie_template = function (xData, yData, generalTitle){

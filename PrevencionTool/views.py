@@ -27,7 +27,7 @@ def default_map(request):
         munipals=json.load(json_data)
 
     feminicidios_data2=getTableVictimaData(request)
-    chart_object=getNationalTimeSeries(feminicidios_data2)
+    # chart_object=getNationalTimeSeries(feminicidios_data2)
     # print(data2)
 
     context={
@@ -35,7 +35,7 @@ def default_map(request):
         "departments":depts,
         "munipalities":munipals,
         "feminicidios_data":feminicidios_data2,
-        "chart_object": chart_object
+        # "chart_object": chart_object
     }
     return render(request, 'PrevencionTool/index.html', context)
 
@@ -127,6 +127,8 @@ def getTableVictimaData(request):
 
         elif (victimas[i].geolocalizacion=="No se sabe"):
             point=["No se sabe"," No se sabe"]
+        print("this is the point")
+        print(point)
         datos_victima={
             'ano_muerte': victimas[i].ano,
             'mes_muerte': victimas[i].mes,
@@ -164,49 +166,42 @@ def getTableVictimaData(request):
 
     return datos
 
-def getNationalTimeSeries(datos):
-    fechas=[]
-    muertes=[]
-    departamentos=[]
-    for x in datos['victimas']:
-        if x['fecha_muerte'] !='No se sabe':
-            count=1
-            # fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y').strftime("%m/%d/%Y"))
-            fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y'))
-            departamentos.append(x['departmento'])
-            muertes.append(count)
-
-    newFeminicidioObject={
-        'fecha_muerte':fechas,
-        # 'departamento': departamentos,
-        'muertes':muertes,
-    }
-    # columns=['fecha_muerte','departamento','muertes']
-    columns=['fecha_muerte','muertes']
-    df=pd.DataFrame(newFeminicidioObject, columns=columns)
-    df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
-    df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
-    # print(df)
-    national_df=df.groupby('fecha_muerte').sum()
-    # national_df=df.groupby('fecha_muerte')['muertes'].sum()
-    print(national_df)
-    # national_df=national_df.to_frame()
-    # national_df2['fecha_muerte'], national_df2 ['muertes'] = zip(national_df['muertes'])
-
-    # print(national_df'fecha_muerte')
-    # n=national_df['fecha_muerte'].to_frame()
-
-    national_json = national_df.to_json(orient='columns')
-    national_json_ob = json.loads(national_json)
-    dates = list(national_json_ob['muertes'].keys())
-    deaths = list(national_json_ob['muertes'].values())
-
-    national_object={
-        'fecha':dates,
-        'muertes':deaths
-    }
-    return national_object
+# def getNationalTimeSeries(datos):
+#     fechas=[]
+#     muertes=[]
+#     departamentos=[]
+#     for x in datos['victimas']:
+#         if x['fecha_muerte'] !='No se sabe':
+#             count=1
+#             fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y'))
+#             departamentos.append(x['departmento'])
+#             muertes.append(count)
+#
+#     newFeminicidioObject={
+#         'fecha_muerte':fechas,
+#         # 'departamento': departamentos,
+#         'muertes':muertes,
+#     }
+#     # columns=['fecha_muerte','departamento','muertes']
+#     columns=['fecha_muerte','muertes']
+#     df=pd.DataFrame(newFeminicidioObject, columns=columns)
+#     df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
+#     df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
+#     # print(df)
+#     national_df=df.groupby('fecha_muerte').sum()
+#     print(national_df)
+#     national_json = national_df.to_json(orient='columns')
+#     national_json_ob = json.loads(national_json)
+#     dates = list(national_json_ob['muertes'].keys())
+#     deaths = list(national_json_ob['muertes'].values())
+#
+#     national_object={
+#         'fecha':dates,
+#         'muertes':deaths
+#     }
+#     return national_object
 def localGraphs(request):
+    print("THIS IS THE LOCALGRAPHS")
     territory = request.GET['territory']
     datos = getTableVictimaData(request)
     fechas=[]
@@ -215,45 +210,60 @@ def localGraphs(request):
     for x in datos['victimas']:
         if x['fecha_muerte'] !='No se sabe':
             count=1
-            # fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y').strftime("%m/%d/%Y"))
             fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y'))
             departamentos.append(x['departmento'])
             muertes.append(count)
+    if territory != 'Nacional':
+        newFeminicidioObject={
+            'fecha_muerte':fechas,
+            'departamento': departamentos,
+            'muertes':muertes,
+        }
+        columns=['fecha_muerte','departamento','muertes']
+        # columns=['fecha_muerte','muertes']
+        df=pd.DataFrame(newFeminicidioObject, columns=columns)
+        df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
+        df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
+        depa_df = df.loc[df['departamento'] == territory]
+        print(type(depa_df))
+        print(depa_df)
+        depa_df_group=depa_df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
+        print(type(depa_df_group))
+        depa_df_group2 = depa_df_group[['fecha_muerte','muertes']].copy()
 
-    newFeminicidioObject={
-        'fecha_muerte':fechas,
-        'departamento': departamentos,
-        'muertes':muertes,
-    }
-    columns=['fecha_muerte','departamento','muertes']
-    # columns=['fecha_muerte','muertes']
-    df=pd.DataFrame(newFeminicidioObject, columns=columns)
-    df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
-    df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
-    depa_df = df.loc[df['departamento'] == territory]
-    print(type(depa_df))
-    print(depa_df)
-    depa_df_group=depa_df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
-    print(type(depa_df_group))
-    depa_df_group2 = depa_df_group[['fecha_muerte','muertes']].copy()
-    # depa_df_group2['fecha_muerte']=depa_df_group['fecha_muerte']
-    # depa_df_group2['muertes']=depa_df_group['muertes']
-    print(depa_df_group2)
-    #
-    # print("local graphs groupby")
-    # depa_df = national_df.loc[df['departamento'] == territory]
-    # print(depa_df)
-    depa_json = depa_df_group2.to_json(orient='columns')
-    depa_json_ob = json.loads(depa_json)
-    print(depa_json_ob)
-    dates = list(depa_json_ob['fecha_muerte'].values())
-    deaths = list(depa_json_ob['muertes'].values())
+        print("THIS IS THE DF PRE")
+        print(depa_df_group2)
 
-    depa_object={
-        'fecha':dates,
-        'muertes':deaths
-    }
-    print(depa_object)
+        depa_json = depa_df_group2.to_json(orient='columns')
+        depa_json_ob = json.loads(depa_json)
+        print(depa_json_ob)
+        dates = list(depa_json_ob['fecha_muerte'].values())
+        deaths = list(depa_json_ob['muertes'].values())
+
+        depa_object={
+            'fecha':dates,
+            'muertes':deaths
+        }
+    else:
+        newFeminicidioObject={
+            'fecha_muerte':fechas,
+            'muertes':muertes,
+        }
+        columns=['fecha_muerte','muertes']
+        df=pd.DataFrame(newFeminicidioObject, columns=columns)
+        df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
+        df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
+        national_df=df.groupby('fecha_muerte').sum()
+        national_json = national_df.to_json(orient='columns')
+        national_json_ob = json.loads(national_json)
+        dates = list(national_json_ob['muertes'].keys())
+        deaths = list(national_json_ob['muertes'].values())
+
+        depa_object={
+            'fecha':dates,
+            'muertes':deaths
+        }
+
     return JsonResponse(depa_object)
 
 def localPieGraphs(request):
@@ -285,7 +295,7 @@ def localPieGraphs(request):
     df=pd.DataFrame(newFeminicidioObject, columns=columns)
     df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
     df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
-    print(df)
+    # print(df)
     if territory =='Nacional':
         national_df=df.groupby(['departamento'])['muertes'].sum().reset_index()
         national_json = national_df.to_json(orient='columns')
@@ -299,21 +309,16 @@ def localPieGraphs(request):
     else:
         print("we are not in national")
         depa_df = df.loc[df['departamento'] == territory]
-        print(type(depa_df))
-        print(depa_df)
-        depa_df_group=depa_df.groupby(['provincia'])['muertes'].sum().reset_index()
-        print(type(depa_df_group))
-        # depa_df_group2 = depa_df_group[['fecha_muerte','muertes']].copy()
-        # depa_df_group2['fecha_muerte']=depa_df_group['fecha_muerte']
-        # depa_df_group2['muertes']=depa_df_group['muertes']
-        print(depa_df_group)
-        #
-        # print("local graphs groupby")
-        # depa_df = national_df.loc[df['departamento'] == territory]
+        # print(type(depa_df))
         # print(depa_df)
+        depa_df_group=depa_df.groupby(['provincia'])['muertes'].sum().reset_index()
+        # print(type(depa_df_group))
+        #
+        # print(depa_df_group)
+
         depa_json = depa_df_group.to_json(orient='columns')
         depa_json_ob = json.loads(depa_json)
-        print(depa_json_ob)
+        # print(depa_json_ob)
         provincias_list = list(depa_json_ob['provincia'].values())
         deaths = list(depa_json_ob['muertes'].values())
 
@@ -323,28 +328,3 @@ def localPieGraphs(request):
         }
 
     return JsonResponse(national_object)
-
-# def plotNationalTimesSeries(dataframe,type):
-#
-#     # times_series=go.Scatter(
-#     #       name=type,
-#     #       x=dataframe['fecha_muerte'],
-#     #       y=dataframe['muertes'],
-#     #       line=dict(
-#     #         color='blue',
-#     #       )
-#     #  )
-#     # layout = go.Layout(
-#     #     title="Feminicidios 2013-2017",
-#     #     xaxis=dict(
-#     #         title='Fecha',
-#     #     ),
-#     #     yaxis=dict(
-#     #         title='Feminicidios',
-#     #     ),
-#     #  )
-#     # chart=go.Figure(data=times_series,layout=layout)
-#     # div=opy.plot(chart_object, auto_open=False, output_type='div')
-#
-#     # fig=px.line(dataframe,x='fecha_muerte',y='muertes')
-#     return chart
