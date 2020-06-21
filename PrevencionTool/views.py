@@ -10,35 +10,6 @@ import plotly.graph_objs as go
 # Create your views here.
 # def index(request):
 #     return HttpResponse("Hello, world. You're at the polls index.")
-
-def default_map(request):
-
-    file_path_bolivia="PrevencionTool/static/PrevencionTool/scripts/countries.geojson"
-    file_path_departments="PrevencionTool/static/PrevencionTool/scripts/departamentosBol.json"
-    file_path_municipalities="PrevencionTool/static/PrevencionTool/scripts/MunicipiosBol.json"
-    data_dict={}
-    with open(file_path_bolivia) as json_data:
-        data_dict=json.load(json_data)
-
-    with open(file_path_departments) as json_data:
-        depts=json.load(json_data)
-
-    with open(file_path_municipalities) as json_data:
-        munipals=json.load(json_data)
-
-    feminicidios_data2=getTableVictimaData(request)
-    # chart_object=getNationalTimeSeries(feminicidios_data2)
-    # print(data2)
-
-    context={
-        "countries":data_dict,
-        "departments":depts,
-        "munipalities":munipals,
-        "feminicidios_data":feminicidios_data2,
-        # "chart_object": chart_object
-    }
-    return render(request, 'PrevencionTool/index.html', context)
-
 def feminicidios_data():
     Victima.objects.all().delete()
     Agresor.objects.all().delete()
@@ -110,11 +81,11 @@ def feminicidios_data():
             agresor_row.save()
     return
 
-def getTableVictimaData(request):
+def getTableVictimaData():
     feminicidios_data()
     victimas_array=[]
     agresor_array=[]
-    datos={
+    datos1={
         'victimas':victimas_array,
         'agresores':agresor_array
     }
@@ -122,13 +93,17 @@ def getTableVictimaData(request):
     print(len(victimas))
     agresores=Agresor.objects.all()
     for  i in range(1,(len(victimas)-1)):
+        # print("this is the geolocalizacion")
+        # print(victimas[i].geolocalizacion)
+        # if(victimas[i].geolocalizacion!="No se sabe" and victimas[i].geolocalizacion!="Geolocalización" ):
         if(victimas[i].geolocalizacion!="No se sabe"):
             point=victimas[i].geolocalizacion.split(',')
 
         elif (victimas[i].geolocalizacion=="No se sabe"):
             point=["No se sabe"," No se sabe"]
-        print("this is the point")
-        print(point)
+
+        # print("this is the point")
+        # print(point)
         datos_victima={
             'ano_muerte': victimas[i].ano,
             'mes_muerte': victimas[i].mes,
@@ -164,46 +139,46 @@ def getTableVictimaData(request):
         }
         agresor_array.append(datos_agresor)
 
-    return datos
+    return datos1
 
-# def getNationalTimeSeries(datos):
-#     fechas=[]
-#     muertes=[]
-#     departamentos=[]
-#     for x in datos['victimas']:
-#         if x['fecha_muerte'] !='No se sabe':
-#             count=1
-#             fechas.append(datetime.datetime.strptime(x['fecha_muerte'], '%d-%m-%Y'))
-#             departamentos.append(x['departmento'])
-#             muertes.append(count)
-#
-#     newFeminicidioObject={
-#         'fecha_muerte':fechas,
-#         # 'departamento': departamentos,
-#         'muertes':muertes,
-#     }
-#     # columns=['fecha_muerte','departamento','muertes']
-#     columns=['fecha_muerte','muertes']
-#     df=pd.DataFrame(newFeminicidioObject, columns=columns)
-#     df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
-#     df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
-#     # print(df)
-#     national_df=df.groupby('fecha_muerte').sum()
-#     print(national_df)
-#     national_json = national_df.to_json(orient='columns')
-#     national_json_ob = json.loads(national_json)
-#     dates = list(national_json_ob['muertes'].keys())
-#     deaths = list(national_json_ob['muertes'].values())
-#
-#     national_object={
-#         'fecha':dates,
-#         'muertes':deaths
-#     }
-#     return national_object
+
+datos = getTableVictimaData()
+
+
+
+
+def default_map(request):
+
+    file_path_bolivia="PrevencionTool/static/PrevencionTool/scripts/countries.geojson"
+    file_path_departments="PrevencionTool/static/PrevencionTool/scripts/departamentosBol.json"
+    file_path_municipalities="PrevencionTool/static/PrevencionTool/scripts/MunicipiosBol.json"
+    data_dict={}
+    with open(file_path_bolivia) as json_data:
+        data_dict=json.load(json_data)
+
+    with open(file_path_departments) as json_data:
+        depts=json.load(json_data)
+
+    with open(file_path_municipalities) as json_data:
+        munipals=json.load(json_data)
+
+    feminicidios_data2=getTableVictimaData()
+    # chart_object=getNationalTimeSeries(feminicidios_data2)
+    # print(data2)
+
+    context={
+        "countries":data_dict,
+        "departments":depts,
+        "munipalities":munipals,
+        "feminicidios_data":feminicidios_data2,
+        # "chart_object": chart_object
+    }
+    return render(request, 'PrevencionTool/index.html', context)
+
 def localGraphs(request):
     print("THIS IS THE LOCALGRAPHS")
     territory = request.GET['territory']
-    datos = getTableVictimaData(request)
+    # datos = getTableVictimaData(request)
     fechas=[]
     muertes=[]
     departamentos=[]
@@ -231,13 +206,19 @@ def localGraphs(request):
         print(type(depa_df_group))
         depa_df_group2 = depa_df_group[['fecha_muerte','muertes']].copy()
 
-        print("THIS IS THE DF PRE")
         print(depa_df_group2)
+        depa_df_group2[['Year','Month','Day']]= depa_df_group2['fecha_muerte'].str.split('-', expand=True)
+        print("afeter")
+        print(depa_df_group2)
+        depa_df_group3=depa_df_group2.groupby(['Year','Month'])['muertes'].sum().reset_index()
+        depa_df_group3['newFecha'] = depa_df_group3[['Year', 'Month']].agg('-'.join, axis=1)
 
-        depa_json = depa_df_group2.to_json(orient='columns')
+        print(depa_df_group3)
+
+        depa_json = depa_df_group3.to_json(orient='columns')
         depa_json_ob = json.loads(depa_json)
         print(depa_json_ob)
-        dates = list(depa_json_ob['fecha_muerte'].values())
+        dates = list(depa_json_ob['newFecha'].values())
         deaths = list(depa_json_ob['muertes'].values())
 
         depa_object={
@@ -253,10 +234,21 @@ def localGraphs(request):
         df=pd.DataFrame(newFeminicidioObject, columns=columns)
         df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
         df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
-        national_df=df.groupby('fecha_muerte').sum()
-        national_json = national_df.to_json(orient='columns')
+        national_df=df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
+        depa_df_group2 = national_df[['fecha_muerte','muertes']].copy()
+
+        print(depa_df_group2)
+        depa_df_group2[['Year','Month','Day']]= depa_df_group2['fecha_muerte'].str.split('-', expand=True)
+        print("afeter")
+        print(depa_df_group2)
+        depa_df_group3=depa_df_group2.groupby(['Year','Month'])['muertes'].sum().reset_index()
+        depa_df_group3['newFecha'] = depa_df_group3[['Year', 'Month']].agg('-'.join, axis=1)
+
+        print(depa_df_group3)
+        national_json = depa_df_group3.to_json(orient='columns')
+        print(national_json)
         national_json_ob = json.loads(national_json)
-        dates = list(national_json_ob['muertes'].keys())
+        dates = list(national_json_ob['newFecha'].values())
         deaths = list(national_json_ob['muertes'].values())
 
         depa_object={
@@ -269,7 +261,7 @@ def localGraphs(request):
 def localPieGraphs(request):
     territory = request.GET['territory']
     print(territory)
-    datos = getTableVictimaData(request)
+    # datos = getTableVictimaData(request)
     fechas=[]
     muertes=[]
     departamentos=[]

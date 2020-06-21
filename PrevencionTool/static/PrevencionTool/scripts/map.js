@@ -637,6 +637,7 @@ const FeminicidiosPackage=(function(){
               line: {
                 color: '#1f3150',
                 width: 2,
+                shape:'spline'
               },
               // marker: {
               //   // color: '#78be20',
