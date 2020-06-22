@@ -306,6 +306,9 @@ def localPieGraphs(request):
 
     if territory =='Nacional':
         national_df=df.groupby(['departamento'])['muertes'].sum().reset_index()
+        new_index = len(national_df)
+        total_sum_regions = national_df['muertes'].sum()
+        national_df.loc[new_index]=['Nacional',total_sum_regions]
         national_df['average_monthly']= national_df['muertes']/total_months
         national_df['average_years']= national_df['muertes']/total_years
 
@@ -329,6 +332,9 @@ def localPieGraphs(request):
         # print(type(depa_df))
         # print(depa_df)
         depa_df_group=depa_df.groupby(['provincia'])['muertes'].sum().reset_index()
+        new_index = len(depa_df_group)
+        total_sum_regions = depa_df_group['muertes'].sum()
+        depa_df_group.loc[new_index]=['Nacional',total_sum_regions]
         depa_df_group['average_monthly']= depa_df_group['muertes']/total_months
         depa_df_group['average_years']= depa_df_group['muertes']/total_years
         # depa_df_group['totalMonths'] = total_months
