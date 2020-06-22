@@ -342,6 +342,7 @@ const FeminicidiosPackage=(function(){
         let makePieGrap;
         let graph_pie_template;
         let makeTablePie;
+        let makeRowsTable;
 
        /*-----------------------------------------------------------------
         *                  PRIVATE METHODS
@@ -736,6 +737,40 @@ const FeminicidiosPackage=(function(){
 
             Plotly.newPlot('piegraph', data, layout)
           }
+
+          makeRowsTable = function(resp,x,tableBody){
+            let id_total = `${x}_total`;
+            let id_prom_an = `${x}_prom_an`;
+            let id_prom_month = `${x}_prom_m`;
+            let id_variacion = `${x}_variacion`;
+            let noData = "Sin Datos";
+            let index= resp['territory'].indexOf(x);
+            let total = resp['muertes'][index];
+            let prom_an = Math.round(resp['avg_years'][index]);
+            let prom_month = Math.round(resp['avg_months'][index]);
+            let newRow;
+            if (x !== "Nacional"){
+              newRow=`<tr>
+                           <td>${x}</td>
+                           <td id="${id_total}">${total}</td>
+                           <td id= "${id_prom_an}">${prom_an}</td>
+                           <td id= "${id_prom_an}">${prom_month}</td>
+                           <td id="${id_variacion}"></td>
+                          </tr>`
+            }
+            else{
+              newRow=`<tr>
+                           <td id="${id_total}">${total}</td>
+                           <td id= "${id_prom_an}">${prom_an}</td>
+                           <td id= "${id_prom_an}">${prom_month}</td>
+                           <td id="${id_variacion}"></td>
+                          </tr>`
+            }
+
+            tableBody = tableBody + newRow;
+            return tableBody;
+          }
+
           //Make the function to have teh Ajax call for the function//
           makePieGrap = function(territory){
             let requestOb={
@@ -753,29 +788,18 @@ const FeminicidiosPackage=(function(){
                 console.log(resp);
                 graph_pie_template(resp['muertes'],resp['territory'],`Distribucion de Feminicidios-${territory}`)
                 let tableBody;
+                let tableBodyNacional;
                 resp['territory'].forEach(function(x){
                   if(x  !== "Nacional"){
-                    let id_total = `${x}_total`;
-                    let id_prom_an = `${x}_prom_an`;
-                    let id_prom_month = `${x}_prom_m`;
-                    let id_variacion = `${x}_variacion`;
-                    let noData = "Sin Datos";
-                    let index= resp['territory'].indexOf(x);
-                    let total = resp['muertes'][index];
-                    let prom_an = Math.round(resp['avg_years'][index]);
-                    let prom_month = Math.round(resp['avg_months'][index]);
-                    let newRow=`<tr>
-                                 <td>${x}</td>
-                                 <td id="${id_total}">${total}</td>
-                                 <td id= "${id_prom_an}">${prom_an}</td>
-                                 <td id= "${id_prom_an}">${prom_month}</td>
-                                 <td id="${id_variacion}"></td>
-                                </tr>`
-                    tableBody = tableBody + newRow;
-                  }
+                    tableBody = makeRowsTable(resp,x,tableBody);
 
+                  }
+                  else{
+                    tableBodyNacional = makeRowsTable(resp,x,tableBodyNacional)
+                  }
                 })
                 $("#table_body_regions").html(tableBody);
+                $("#table_body_regions_nacional").html(tableBodyNacional);
 
               }
             })
