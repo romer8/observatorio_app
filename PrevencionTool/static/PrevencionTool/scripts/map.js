@@ -752,28 +752,31 @@ const FeminicidiosPackage=(function(){
                 console.log("this is the data Pie");
                 console.log(resp);
                 graph_pie_template(resp['muertes'],resp['territory'],`Distribucion de Feminicidios-${territory}`)
-                departmentObjectArray.forEach(function(x){
-                  let id_total = `${x.boundary}_total`;
-                  let id_prom_an = `${x.boundary}_prom_an`;
-                  let id_prom_month = `${x.boundary}_prom_m`;
-                  let id_variacion = `${x.boundary}_variacion`;
-                  let noData = "Sin Datos";
-                  if(resp['territory'].includes(x.boundary)){
-                    let index= resp['territory'].indexOf(x.boundary);
+                let tableBody;
+                resp['territory'].forEach(function(x){
+                  if(x  !== "Nacional"){
+                    let id_total = `${x}_total`;
+                    let id_prom_an = `${x}_prom_an`;
+                    let id_prom_month = `${x}_prom_m`;
+                    let id_variacion = `${x}_variacion`;
+                    let noData = "Sin Datos";
+                    let index= resp['territory'].indexOf(x);
                     let total = resp['muertes'][index];
-                    let prom_an = resp['avg_years'][index];
-                    let prom_month = resp['avg_months'][index];
-                    document.getElementById(id_total).innerHTML=total;
-                    document.getElementById(id_prom_an).innerHTML=Math.round(prom_an);
-                    document.getElementById(id_prom_month).innerHTML=Math.round(prom_month);
+                    let prom_an = Math.round(resp['avg_years'][index]);
+                    let prom_month = Math.round(resp['avg_months'][index]);
+                    let newRow=`<tr>
+                                 <td>${x}</td>
+                                 <td id="${id_total}">${total}</td>
+                                 <td id= "${id_prom_an}">${prom_an}</td>
+                                 <td id= "${id_prom_an}">${prom_month}</td>
+                                 <td id="${id_variacion}"></td>
+                                </tr>`
+                    tableBody = tableBody + newRow;
                   }
-                  else{
-                    document.getElementById(id_total).innerHTML=noData;
-                    document.getElementById(id_prom_an).innerHTML=noData;
-                    document.getElementById(id_prom_month).innerHTML=noData;
 
-                  }
                 })
+                $("#table_body_regions").html(tableBody);
+
               }
             })
           }
