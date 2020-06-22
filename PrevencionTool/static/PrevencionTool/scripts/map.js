@@ -341,6 +341,7 @@ const FeminicidiosPackage=(function(){
         let graph_template;
         let makePieGrap;
         let graph_pie_template;
+        let makeTablePie;
 
        /*-----------------------------------------------------------------
         *                  PRIVATE METHODS
@@ -360,52 +361,52 @@ const FeminicidiosPackage=(function(){
             {boundary:'Nacional',
               zoomLevel:6,
               lat:-17.3894997,
-              long:-66.1567993
+              long:-66.1567993,
             },
             {boundary:'La Paz',
               zoomLevel:12,
               lat:-16.502705,
-              long:-68.160786
+              long:-68.160786,
             },
             {boundary:'Cochabamba',
               zoomLevel:12,
               lat:-17.413700,
-              long:-66.151339
+              long:-66.151339,
             },
             {boundary:'Santa Cruz',
               lat:-17.813157,
               zoomLevel:12,
-              long:-63.169639
+              long:-63.169639,
             },
             {boundary:'Tarija',
               zoomLevel:12,
               lat:-21.519863,
-              long:-64.729898
+              long:-64.729898,
             },
             {boundary:'Potosí',
               lat:-19.578493,
               zoomLevel:12,
-              long:-65.752852
+              long:-65.752852,
             },
             {boundary:'Oruro',
               zoomLevel:12,
               lat:-17.973250,
-              long:-67.093894
+              long:-67.093894,
             },
             {boundary:'Beni',
               zoomLevel:12,
               lat:-14.834720,
-              long:-64.901999
+              long:-64.901999,
             },
             {boundary:'Pando',
               zoomLevel:12,
               lat:-11.029391,
-              long:-68.766984
+              long:-68.766984,
             },
             {boundary:'Chuquisaca',
               zoomLevel:12,
               lat:-19.035578,
-              long:-65.257393
+              long:-65.257393,
             },
 
           ];
@@ -669,7 +670,8 @@ const FeminicidiosPackage=(function(){
                   }
                 },
                 showgrid: false,
-                zeroline: false
+                zeroline: false,
+                autorange: true,
 
               },
               yaxis: {
@@ -687,16 +689,11 @@ const FeminicidiosPackage=(function(){
               }
             }
 
-            Plotly.newPlot('graph', data, layout);
+            Plotly.newPlot('graphts', data, layout);
 
           }
           // ADD THE GRAPH TO THE DATA //
           makegraph = function(territory){
-            // if(territory ==="Nacional"){
-            //   // console.log(chart_object);
-            //   graph_template(chart_object['fecha'],chart_object['muertes'],"Series de Tiempo Feminicidios Nivel Nacional")
-            // }
-            // else{
 
               let requestOb={
                 'territory':territory,
@@ -752,9 +749,31 @@ const FeminicidiosPackage=(function(){
               data: requestOb,
               contentType:'application/json',
               success: function(resp) {
-                console.log("this is the data");
+                console.log("this is the data Pie");
                 console.log(resp);
                 graph_pie_template(resp['muertes'],resp['territory'],`Distribucion de Feminicidios-${territory}`)
+                departmentObjectArray.forEach(function(x){
+                  let id_total = `${x.boundary}_total`;
+                  let id_prom_an = `${x.boundary}_prom_an`;
+                  let id_prom_month = `${x.boundary}_prom_m`;
+                  let id_variacion = `${x.boundary}_variacion`;
+                  let noData = "Sin Datos";
+                  if(resp['territory'].includes(x.boundary)){
+                    let index= resp['territory'].indexOf(x.boundary);
+                    let total = resp['muertes'][index];
+                    let prom_an = resp['avg_years'][index];
+                    let prom_month = resp['avg_months'][index];
+                    document.getElementById(id_total).innerHTML=total;
+                    document.getElementById(id_prom_an).innerHTML=Math.round(prom_an);
+                    document.getElementById(id_prom_month).innerHTML=Math.round(prom_month);
+                  }
+                  else{
+                    document.getElementById(id_total).innerHTML=noData;
+                    document.getElementById(id_prom_an).innerHTML=noData;
+                    document.getElementById(id_prom_month).innerHTML=noData;
+
+                  }
+                })
               }
             })
           }
