@@ -145,8 +145,6 @@ def getTableVictimaData():
 datos = getTableVictimaData()
 
 
-
-
 def default_map(request):
 
     file_path_bolivia="PrevencionTool/static/PrevencionTool/scripts/countries.geojson"
@@ -176,7 +174,7 @@ def default_map(request):
     return render(request, 'PrevencionTool/index.html', context)
 
 def localGraphs(request):
-    print("THIS IS THE LOCALGRAPHS")
+    # print("THIS IS THE LOCALGRAPHS")
     territory = request.GET['territory']
     # datos = getTableVictimaData(request)
     fechas=[]
@@ -200,24 +198,24 @@ def localGraphs(request):
         df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
         df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
         depa_df = df.loc[df['departamento'] == territory]
-        print(type(depa_df))
-        print(depa_df)
+        # print(type(depa_df))
+        # print(depa_df)
         depa_df_group=depa_df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
-        print(type(depa_df_group))
+        # print(type(depa_df_group))
         depa_df_group2 = depa_df_group[['fecha_muerte','muertes']].copy()
 
-        print(depa_df_group2)
+        # print(depa_df_group2)
         depa_df_group2[['Year','Month','Day']]= depa_df_group2['fecha_muerte'].str.split('-', expand=True)
-        print("afeter")
-        print(depa_df_group2)
+        # print("afeter")
+        # print(depa_df_group2)
         depa_df_group3=depa_df_group2.groupby(['Year','Month'])['muertes'].sum().reset_index()
         depa_df_group3['newFecha'] = depa_df_group3[['Year', 'Month']].agg('-'.join, axis=1)
 
-        print(depa_df_group3)
+        # print(depa_df_group3)
 
         depa_json = depa_df_group3.to_json(orient='columns')
         depa_json_ob = json.loads(depa_json)
-        print(depa_json_ob)
+        # print(depa_json_ob)
         dates = list(depa_json_ob['newFecha'].values())
         deaths = list(depa_json_ob['muertes'].values())
 
@@ -237,16 +235,16 @@ def localGraphs(request):
         national_df=df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
         depa_df_group2 = national_df[['fecha_muerte','muertes']].copy()
 
-        print(depa_df_group2)
+        # print(depa_df_group2)
         depa_df_group2[['Year','Month','Day']]= depa_df_group2['fecha_muerte'].str.split('-', expand=True)
-        print("afeter")
-        print(depa_df_group2)
+        # print("afeter")
+        # print(depa_df_group2)
         depa_df_group3=depa_df_group2.groupby(['Year','Month'])['muertes'].sum().reset_index()
         depa_df_group3['newFecha'] = depa_df_group3[['Year', 'Month']].agg('-'.join, axis=1)
 
-        print(depa_df_group3)
+        # print(depa_df_group3)
         national_json = depa_df_group3.to_json(orient='columns')
-        print(national_json)
+        # print(national_json)
         national_json_ob = json.loads(national_json)
         dates = list(national_json_ob['newFecha'].values())
         deaths = list(national_json_ob['muertes'].values())
@@ -257,6 +255,22 @@ def localGraphs(request):
         }
 
     return JsonResponse(depa_object)
+def getNumberOfMonths(df):
+    print("localpie vefore")
+    # depa_count_df = df.loc[df['departamento'] == "La Paz"]
+    depa_count_df = df
+    df_count_sum = depa_count_df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
+    df_count_sum[['Year','Month','Day']]= df_count_sum['fecha_muerte'].str.split('-', expand=True)
+    df_count_sum['Year-Month']= df_count_sum[['Year', 'Month']].agg('-'.join, axis=1)
+    total_meses = df_count_sum['Year-Month'].unique()
+    return total_meses.size
+
+def getNumberOfYears(df):
+    depa_count_df = df
+    df_count_sum = depa_count_df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
+    df_count_sum[['Year','Month','Day']]= df_count_sum['fecha_muerte'].str.split('-', expand=True)
+    total_years = df_count_sum['Year'].unique()
+    return total_years.size
 
 def localPieGraphs(request):
     territory = request.GET['territory']
@@ -287,16 +301,27 @@ def localPieGraphs(request):
     df=pd.DataFrame(newFeminicidioObject, columns=columns)
     df.sort_values(by=['fecha_muerte'], inplace = True, ascending=True)
     df['fecha_muerte']= df['fecha_muerte'].dt.strftime('%Y-%m-%d')
-    # print(df)
+    total_months=getNumberOfMonths(df)
+    total_years = getNumberOfYears(df)
+
     if territory =='Nacional':
         national_df=df.groupby(['departamento'])['muertes'].sum().reset_index()
+        national_df['average_monthly']= national_df['muertes']/total_months
+        national_df['average_years']= national_df['muertes']/total_years
+
+        # national_df['totalMonths'] = total_months
+        print(national_df)
         national_json = national_df.to_json(orient='columns')
         national_json_ob = json.loads(national_json)
         departamento_list = list(national_json_ob['departamento'].values())
         deaths = list(national_json_ob['muertes'].values())
+        avg_month_list = list(national_json_ob['average_monthly'].values())
+        avg_years_list = list(national_json_ob['average_years'].values())
         national_object={
             'territory':departamento_list,
-            'muertes':deaths
+            'muertes':deaths,
+            'avg_years':avg_years_list,
+            'avg_months':avg_month_list
         }
     else:
         print("we are not in national")
@@ -304,19 +329,28 @@ def localPieGraphs(request):
         # print(type(depa_df))
         # print(depa_df)
         depa_df_group=depa_df.groupby(['provincia'])['muertes'].sum().reset_index()
+        depa_df_group['average_monthly']= depa_df_group['muertes']/total_months
+        depa_df_group['average_years']= depa_df_group['muertes']/total_years
+        # depa_df_group['totalMonths'] = total_months
+
         # print(type(depa_df_group))
         #
-        # print(depa_df_group)
+        print(depa_df_group)
 
         depa_json = depa_df_group.to_json(orient='columns')
         depa_json_ob = json.loads(depa_json)
         # print(depa_json_ob)
         provincias_list = list(depa_json_ob['provincia'].values())
         deaths = list(depa_json_ob['muertes'].values())
+        avg_month_list = list(depa_json_ob['average_monthly'].values())
+        avg_years_list = list(depa_json_ob['average_years'].values())
+
 
         national_object={
             'territory':provincias_list,
-            'muertes':deaths
+            'muertes':deaths,
+            'avg_years':avg_years_list,
+            'avg_months':avg_month_list
         }
 
     return JsonResponse(national_object)
