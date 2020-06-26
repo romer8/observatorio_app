@@ -5,6 +5,7 @@ import os
 import json
 import csv
 import pandas as pd
+import numpy as np
 import datetime
 import plotly.graph_objs as go
 # Create your views here.
@@ -271,6 +272,29 @@ def getNumberOfYears(df):
     df_count_sum[['Year','Month','Day']]= df_count_sum['fecha_muerte'].str.split('-', expand=True)
     total_years = df_count_sum['Year'].unique()
     return total_years.size
+def getSTDBigArea(df):
+    depa_count_df = df
+    df_count_sum = depa_count_df.groupby(['fecha_muerte'])['muertes'].sum().reset_index()
+    df_count_sum[['Year','Month','Day']]= df_count_sum['fecha_muerte'].str.split('-', expand=True)
+    df_sum_year=df_count_sum.groupby(['Year'])['muertes'].sum().reset_index()
+    sum_deaths_years = df_sum_year['muertes'].to_numpy()
+    standard_dev = np.std(sum_deaths_years)
+    print("this is the standard dev")
+    print(standard_dev)
+    return standard_dev
+
+def getSTDSmallArea(df,areaType):
+    list_unique_areas_std=[]
+    df_count_sum = df
+    df_count_sum[['Year','Month','Day']]= df_count_sum['fecha_muerte'].str.split('-', expand=True)
+    df_grouped_depa = df_count_sum.groupby([areaType,'Year'])['muertes'].sum().reset_index()
+    areas_list = sorted(df_count_sum[areaType].unique())
+    for area in areas_list:
+        area_df_one = df_grouped_depa.loc[df_grouped_depa[areaType] == area]
+        sum_deaths_years = area_df_one['muertes'].to_numpy()
+        area_std = np.std(sum_deaths_years)
+        list_unique_areas_std.append(area_std)
+    return list_unique_areas_std
 
 def localPieGraphs(request):
     territory = request.GET['territory']
@@ -305,13 +329,19 @@ def localPieGraphs(request):
     total_years = getNumberOfYears(df)
 
     if territory =='Nacional':
+        standard_dev_nacional = getSTDBigArea(df)
         national_df=df.groupby(['departamento'])['muertes'].sum().reset_index()
         new_index = len(national_df)
         total_sum_regions = national_df['muertes'].sum()
         national_df.loc[new_index]=['Nacional',total_sum_regions]
         national_df['average_monthly']= national_df['muertes']/total_months
         national_df['average_years']= national_df['muertes']/total_years
+        list_unique_areas_std = getSTDSmallArea(df,'departamento')
+        list_unique_areas_std.append(standard_dev_nacional)
+        np_unique_areas_std = np.asarray(list_unique_areas_std)
+        print(list_unique_areas_std)
 
+        national_df['std_year']=np_unique_areas_std
         # national_df['totalMonths'] = total_months
         print(national_df)
         national_json = national_df.to_json(orient='columns')
@@ -320,23 +350,34 @@ def localPieGraphs(request):
         deaths = list(national_json_ob['muertes'].values())
         avg_month_list = list(national_json_ob['average_monthly'].values())
         avg_years_list = list(national_json_ob['average_years'].values())
+        variation_year_list = list(national_json_ob['std_year'].values())
         national_object={
             'territory':departamento_list,
             'muertes':deaths,
             'avg_years':avg_years_list,
-            'avg_months':avg_month_list
+            'avg_months':avg_month_list,
+            'variation':variation_year_list
         }
     else:
         print("we are not in national")
         depa_df = df.loc[df['departamento'] == territory]
-        # print(type(depa_df))
-        # print(depa_df)
+        standard_dev_dep = getSTDBigArea(depa_df)
+        list_unique_areas_std = getSTDSmallArea(depa_df,'provincia')
+        print("first list")
+        print(list_unique_areas_std)
+        list_unique_areas_std.append(standard_dev_dep)
+        np_unique_areas_std = np.asarray(list_unique_areas_std)
         depa_df_group=depa_df.groupby(['provincia'])['muertes'].sum().reset_index()
         new_index = len(depa_df_group)
         total_sum_regions = depa_df_group['muertes'].sum()
         depa_df_group.loc[new_index]=['Nacional',total_sum_regions]
         depa_df_group['average_monthly']= depa_df_group['muertes']/total_months
         depa_df_group['average_years']= depa_df_group['muertes']/total_years
+        print("this is the length of the stds in the deps")
+        print(len(np_unique_areas_std))
+        print(depa_df_group)
+        depa_df_group['std_year']=np_unique_areas_std
+
         # depa_df_group['totalMonths'] = total_months
 
         # print(type(depa_df_group))
@@ -350,13 +391,15 @@ def localPieGraphs(request):
         deaths = list(depa_json_ob['muertes'].values())
         avg_month_list = list(depa_json_ob['average_monthly'].values())
         avg_years_list = list(depa_json_ob['average_years'].values())
+        variation_year_list = list(depa_json_ob['std_year'].values())
 
 
         national_object={
             'territory':provincias_list,
             'muertes':deaths,
             'avg_years':avg_years_list,
-            'avg_months':avg_month_list
+            'avg_months':avg_month_list,
+            'variation': variation_year_list
         }
 
     return JsonResponse(national_object)
