@@ -639,7 +639,7 @@ const FeminicidiosPackage=(function(){
               line: {
                 color: '#1f3150',
                 width: 2,
-                shape:'spline'
+                // shape:'spline'
               },
               // marker: {
               //   // color: '#78be20',
@@ -748,14 +748,24 @@ const FeminicidiosPackage=(function(){
             let total = resp['muertes'][index];
             let prom_an = Math.round(resp['avg_years'][index]);
             let prom_month = Math.round(resp['avg_months'][index]);
+            let variation = Math.round(resp['variation'][index]);
+            let variationWord;
+            let percentageX = (variation/total)*100;
+
+            if(percentageX >= 15){
+              variationWord="PROPORCIONADO"
+            }
+            if(percentageX < 15){
+              variationWord="DESPROPORCIONADO"
+            }
+
             let newRow;
             if (x !== "Nacional"){
               newRow=`<tr>
-                           <td>${x}</td>
-                           <td id="${id_total}">${total}</td>
-                           <td id= "${id_prom_an}">${prom_an}</td>
-                           <td id= "${id_prom_an}">${prom_month}</td>
-                           <td id="${id_variacion}"></td>
+                           <td class="departmentName">${x}</td>
+                           <td id="${id_total}" class="departmentDataRow">${total}</td>
+                           <td id= "${id_prom_an}" class="departmentDataRow">${prom_an}</td>
+                           <td id= "${id_prom_an}" class="departmentDataRow">${prom_month}</td>
                           </tr>`
             }
             else{
@@ -763,8 +773,10 @@ const FeminicidiosPackage=(function(){
                            <td id="${id_total}">${total}</td>
                            <td id= "${id_prom_an}">${prom_an}</td>
                            <td id= "${id_prom_an}">${prom_month}</td>
-                           <td id="${id_variacion}"></td>
+                           <td id="${id_variacion}">${variationWord}</td>
                           </tr>`
+              console.log("this is PERCENTA");
+              console.log(percentageX);
             }
 
             tableBody = tableBody + newRow;
@@ -786,7 +798,7 @@ const FeminicidiosPackage=(function(){
               success: function(resp) {
                 console.log("this is the data Pie");
                 console.log(resp);
-                graph_pie_template(resp['muertes'],resp['territory'],`Distribucion de Feminicidios-${territory}`)
+
                 let tableBody;
                 let tableBodyNacional;
                 resp['territory'].forEach(function(x){
@@ -798,6 +810,9 @@ const FeminicidiosPackage=(function(){
                     tableBodyNacional = makeRowsTable(resp,x,tableBodyNacional)
                   }
                 })
+                resp['muertes'].pop();
+                resp['territory'].pop();
+                graph_pie_template(resp['muertes'],resp['territory'],`Distribucion de Feminicidios-${territory}`)
                 $("#table_body_regions").html(tableBody);
                 $("#table_body_regions_nacional").html(tableBodyNacional);
 
