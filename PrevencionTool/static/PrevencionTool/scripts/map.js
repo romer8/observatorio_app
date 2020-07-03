@@ -409,7 +409,6 @@ const FeminicidiosPackage=(function(){
               lat:-19.035578,
               long:-65.257393,
             },
-
           ];
           buttonGraph=$('#boton');
           buttonGraph.on("click", function(e){
@@ -519,7 +518,6 @@ const FeminicidiosPackage=(function(){
                $('#provsList').append(option);
                // elementFather.appendChild(buttonElement);
              }
-
           }
           cleanDropdown = function (divElement){
             let div=document.getElementById(divElement);
