@@ -1,32 +1,8 @@
 {% load static %}
 <!DOCTYPE html>
 <!-- Load Leaflet from CDN -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-crossorigin=""/>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw-src.css"/>
-<script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-crossorigin=""></script>
-<!-- Load Esri Leaflet from CDN -->
-<script src="https://unpkg.com/esri-leaflet@2.3.2/dist/esri-leaflet.js"
-integrity="sha512-6LVib9wGnqVKIClCduEwsCub7iauLXpwrd5njR2J507m3A2a4HXJDLMiSZzjcksag3UluIfuW1KzuWVI5n/cuQ=="
-crossorigin=""></script>
-<script type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.2/leaflet.draw-src.js"></script>
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">  <!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet" />
 
-<!-- JS, Popper.js, and jQuery -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js"></script> -->
-<script src="https://use.fontawesome.com/ab857238ca.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
-<script src="{% static 'PrevencionTool/scripts/areasDep.js' %}" > </script>
+
 
 <style>
       #mapAddCase{
@@ -46,6 +22,7 @@ crossorigin=""></script>
       </div>
       <div class="modal-body">
         <form id="dataNewCase">
+          {% csrf_token %}
           <div class="form-group">
             <label for="recipient-name" class="col-form-label">Nombre Completo (Nombre Apellido)</label>
             <input type="text" class="form-control" id="completeName">
@@ -65,18 +42,10 @@ crossorigin=""></script>
           </div>
           <div class="form-group">
             <label for="recipient-name" class="col-form-label">Fecha Muerte</label>
-            <div class="containerTime">
-                <div class='col-md-5'>
-                    <div class="form-group">
-                        <div class='input-group date' id='datetimepicker6' data-provide="datepicker">
-                            <input type='text' class="form-control" />
-                            <span class="input-group-addon">
-                                <span class="glyphicon glyphicon-calendar"></span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
+            <div id="dateselection">
+              <input id="single-datepicker-input" type="text">
             </div>
+
           </div>
           <div class="form-group">
             <label for="recipient-name" class="col-form-label">Edad</label>
@@ -89,6 +58,10 @@ crossorigin=""></script>
           <div class="form-group">
             <label for="message-text" class="col-form-label">Agression Previa</label>
             <textarea class="form-control" id="AgressionPrevia"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="message-text" class="col-form-label">Causa de Muerte</label>
+            <textarea class="form-control" id="CausaMuerte"></textarea>
           </div>
           <div class="form-group">
             <label for="message-text" class="col-form-label">Estado del Caso</label>
@@ -108,192 +81,3 @@ crossorigin=""></script>
     </div>
   </div>
 </div>
-
-<script type="text/javascript">
-  // var date_object =  $('#datetimepicker6').datepicker('getDates')[0];
-  // var date_string = date_object.toISOString().split("T")[0]
-  var provActiveLayer;
-  var caseToAddGeolocalizacion;
-  var MyCustomMarker = L.Icon.extend({
-    options: {
-      shadowUrl: null,
-      iconAnchor: new L.Point(12, 12),
-      iconSize: new L.Point(24, 24),
-      iconUrl: 'https://img.icons8.com/nolan/64/coffin.png'
-    }
-  });
-  var center = [-17.3894997, -66.1567993];
-  var osmUrl = 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-          osmAttrib = '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          osm = L.tileLayer(osmUrl, { maxZoom: 18, attribution: osmAttrib }),
-          map2 = new L.Map('mapAddCase', { center: center, zoom: 13 }),
-          drawnItems = L.featureGroup().addTo(map2);
-  L.control.layers({
-      'Vista Normal': osm.addTo(map2),
-      "Vista Satelital": L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
-          attribution: 'google'
-      }),
-  }, { 'Casos Anadido': drawnItems }, { position: 'topleft', collapsed: false }).addTo(map2);
-  map2.addControl(new L.Control.Draw({
-      edit: {
-          featureGroup: drawnItems,
-          poly: {
-              allowIntersection: false
-          }
-      },
-      draw: {
-          polyline:false,
-          polygon: false,
-          circle:false,
-          rectangle:false,
-          circlemarker:false,
-          marker: {
-            icon: new MyCustomMarker()
-          }
-      }
-  }));
-
-  map2.on(L.Draw.Event.CREATED, function (event) {
-      var layer = event.layer;
-      drawnItems.addLayer(layer);
-      L.Draw.Event.STOP;
-      caseToAddGeolocalizacion=`${layer['_latlng']['lat']},${layer['_latlng']['lng']}`
-      console.log(caseToAddGeolocalizacion);
-  });
-
-
-  //departments list display boundary//
-  var displayBoundary = function(activeDept,departmentObject){
-    departmentObject.forEach(function(x){
-      if(x.boundary ==activeDept){
-        map2.setView([x['lat'],x['long']],x['zoomLevel']);
-      }
-    })
-  };
-
-  //MAKING the second dropdown for the porvinces //
-  makeSecondDropDown=function(dept){
-    document.getElementById('provinceList2').options.length = 0;
-    let option = '';
-    departmentProvObjectArray.forEach(function(x){
-      if(x['boundary']==dept && dept != "Nacional"){
-        for (let i=0;i<x['provinces'].length;i++){
-           option += '<option value="'+ x['provinces'][i] + '">' + x['provinces'][i] + '</option>';
-        }
-        $('#provinceList2').append(option);
-      }
-    })
-    if(dept=="Nacional"){
-      let option=''
-      departmentProvObjectArray.forEach(function(x){
-        if(x.boundary != "Nacional"){
-          for (let i=0;i<x['provinces'].length;i++){
-             option += '<option value="'+ x['provinces'][i] + '">' + x['provinces'][i] + '</option>';
-          }
-        }
-      })
-      $('#provinceList2').append(option);
-
-    }
-  };
-
-  makesDropdowns = function(){
-    let option = '';
-    // MAKING THE DROPDOWN MENU// when selecting other
-    for (let i=0;i<departmentProvObjectArray.length;i++){
-       option += '<option value="'+ departmentProvObjectArray[i]['boundary'] + '">' + departmentProvObjectArray[i]['boundary'] + '</option>';
-    }
-    $('#departmentList2').append(option);
-    option=''
-    departmentProvObjectArray.forEach(function(x){
-      if(x.boundary != "Nacional"){
-        for (let i=0;i<x['provinces'].length;i++){
-           option += '<option value="'+ x['provinces'][i] + '">' + x['provinces'][i] + '</option>';
-        }
-      }
-    })
-    $('#provinceList2').append(option);
-  }
-
-
-  makesDropdowns();
-  //ADDING THE CLICK EVENT TO THE DROPDOWN MENU, SO ONE CAN SELECT IT//
-  $('#departmentList2').on("click change", function(e){
-    if(e.target.text!=undefined){
-      e.preventDefault();
-      let department=e.target.text;
-      if(typeof (e.target.text) != 'undefined'){
-        // chooseCountry(country,backgroundColor);
-        console.log(department);
-        // displayDepartment(department);
-        displayBoundary(department, departmentProvObjectArray);
-        // cleanDropdown("provinceList2");
-
-        makeSecondDropDown(department)
-        // addDropdown(department,"sideSmall",municipalitiesData,"prov");
-        // makegraph(department);
-        // makePieGrap(department);
-      }
-      else{
-        console.log('The country selected is undefined ');
-      }
-    }
-  });
-  addProvinceBoundary = function(prov){
-    $.ajax({
-      url: "https://geoserver.hydroshare.org/geoserver/HS-5f0bfe9647de4f778be9857ed3433f22/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=HS-5f0bfe9647de4f778be9857ed3433f22%3Aprovincias&maxFeatures=200&outputFormat=application%2Fjson",
-      success: function(result){
-        featuresArray= result['features'];
-        featuresArray.forEach(function(feature){
-          let featurePropName=feature['properties']['NOM_PROV'];
-          if(featurePropName == prov){
-            console.log(provActiveLayer);
-            if( provActiveLayer !=undefined){
-              console.log("the layer is undefined");
-              map2.removeLayer(provActiveLayer);
-            }
-            provActiveLayer = L.geoJson(feature);
-            provActiveLayer.addTo(map2);
-            console.log(typeof(provActiveLayer.getBounds()));
-            map2.fitBounds(provActiveLayer.getBounds());
-          }
-        })
-
-      }
-    });
-  }
-  $('#provinceList2').on("click change", function(e){
-    if(e.target.text!=undefined){
-      e.preventDefault();
-      let province=e.target.text;
-      if(typeof (e.target.text) != 'undefined'){
-        // chooseCountry(country,backgroundColor);
-        console.log(province);
-        // displayDepartment(department);
-        addProvinceBoundary(province);
-
-      }
-      else{
-        console.log('The country selected is undefined ');
-      }
-    }
-  });
-
-addNewCaseActive = function(){
-  console.log("pressing button");
-  let serializeObject = $("#dataNewCase").serialize();
-  console.log(serializeObject);
-
-
-}
-$("#addNewCase").on("click", addNewCaseActive);
-
-$(function(){
-
-  var $select = $(".1-100");
-  for (i=0;i<=100;i++){
-      $select.append($('<option></option>').val(i).html(i))
-  }
-});
-
-</script>
