@@ -343,6 +343,11 @@ const FeminicidiosPackage=(function(){
         let graph_pie_template;
         let makeTablePie;
         let makeRowsTable;
+        let addDefaultBehaviorToAjax;
+        let getCookie;
+        let checkCsrfSafe;
+        let addNewCaseActive;
+        let searchCase;
 
        /*-----------------------------------------------------------------
         *                  PRIVATE METHODS
@@ -358,6 +363,7 @@ const FeminicidiosPackage=(function(){
           municipalitiesData=JSON.parse(JSON.stringify(municipalitiesGeoJson));
           departmentData=JSON.parse(JSON.stringify(departmentsGeoJson));
           feminicidiosData=JSON.parse(JSON.stringify(feminicidios));
+          console.log(feminicidiosData);
           departmentObjectArray=[
             {boundary:'Nacional',
               zoomLevel:6,
@@ -482,11 +488,17 @@ const FeminicidiosPackage=(function(){
           //ADDING THE SECOND DROPDOWN MENU OF THE PROVINCIAS UNDER THE DEPARTMENT DROPDOWN MENU//
           addDropdown= function (boundary,divElement,dataBoundary,type){
             console.log("entering the dropdown function");
-            cleanDropdown("provsList");
-             let elementFather=document.getElementById(divElement);
-             let x = document.createElement("SELECT");
-             x.setAttribute("id", "provsList");
-             elementFather.appendChild(x);
+            // cleanDropdown("provsList");
+
+            $('#provsList').empty();
+            $('#provsList').show();
+            let x = document.getElementById("provsList");
+
+             // let elementFather=document.getElementById(divElement);
+             // let x = document.createElement("SELECT");
+             // x.setAttribute("id", "provsList");
+             // elementFather.appendChild(x);
+
              // let buttonElement=document.createElement("button");
              // buttonElement.setAttribute("id","boton");
              // buttonElement.innerHTML='Graficos';
@@ -607,7 +619,7 @@ const FeminicidiosPackage=(function(){
                     </tr>\
                     <tr class="popup-table-row">\
                       <th class="popup-table-header">Estado del Caso: </th>\
-                      <td id="value-agresion_previa" class="popup-table-data">'+feminicidiosData.victimas[i].estado_del_caso+'</td>\
+                      <td id="value-estado_del_caso" class="popup-table-data">'+feminicidiosData.victimas[i].estado_del_caso+'</td>\
                     </tr>\
                   </table>\
                   <p><strong>Circunstacias del Feminicidio</strong><p>'+feminicidiosData.victimas[i].circunstancias;
@@ -623,6 +635,28 @@ const FeminicidiosPackage=(function(){
           }
           //MAKE THE GRAPH TEMPLATE FOR IT //
           graph_template = function(xData, yData, generalTitle){
+            var config = {
+              modeBarButtonsToAdd: [{ name: 'downloadCsv', title: 'Download data as csv', icon: Plotly.Icons.disk, click: function(){
+                  var csvData = [];
+                  var header = ["Fecha","Cantidad de Feminicidio"] //main header.
+                  csvData.push(header);
+                  for (var i = 0; i < xData.length; i++){ //data
+                    var line = [xData[i],yData[i]];
+                    csvData.push(line);
+                  }
+                  var csvFile = csvData.map(e=>e.map(a=>'"'+((a||"").toString().replace(/"/gi,'""'))+'"').join(",")).join("\r\n"); //quote all fields, escape quotes by doubling them.
+                  var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+                  var link = document.createElement("a");
+                  var url = URL.createObjectURL(blob);
+                  link.setAttribute("href", url);
+                  link.setAttribute("download", generalTitle.replace(/[^a-z0-9_.-]/gi,'_') + ".csv");
+                  link.style.visibility = 'hidden';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+              } }],
+            }
+
             // let size=[];
             // yData.forEach(function(x){
             //   size.push(x*20);
@@ -688,7 +722,7 @@ const FeminicidiosPackage=(function(){
               }
             }
 
-            Plotly.newPlot('graphts', data, layout);
+            Plotly.newPlot('graphts', data, layout, config);
 
           }
           // ADD THE GRAPH TO THE DATA //
@@ -707,7 +741,16 @@ const FeminicidiosPackage=(function(){
                 success: function(resp) {
                   console.log("this is the data");
                   console.log(resp);
-                  graph_template(resp['fecha'],resp['muertes'],`Series de tiempo ${territory}-Feminicidios`)
+                  if(resp['muertes'].length > 0 ){
+                    $("#graphts").empty();
+                    graph_template(resp['fecha'],resp['muertes'],`Series de tiempo ${territory}-Feminicidios`);
+
+                  }
+                  else{
+                    $("#graphts").empty();
+                    $("#graphts").html(`<div id="noDataGraph"><p>No hay Datos nececarios para graficos para el departamento seleccionado</p>
+                      <img src="/static/PrevencionTool/images/nodata3.png" alt=""></div>`);
+                  }
 
                 }
               })
@@ -715,6 +758,28 @@ const FeminicidiosPackage=(function(){
           };
           //Makes the PIE graph for the different departments //
           graph_pie_template = function (xData, yData, generalTitle){
+            var config = {
+              modeBarButtonsToAdd: [{ name: 'downloadCsv', title: 'Download data as csv', icon: Plotly.Icons.disk, click: function(){
+                  var csvData = [];
+                  var header = ["Cantidad de Femincidios","Departamento/Provincia"] //main header.
+                  csvData.push(header);
+                  for (var i = 0; i < xData.length; i++){ //data
+                    var line = [xData[i],yData[i]];
+                    csvData.push(line);
+                  }
+                  var csvFile = csvData.map(e=>e.map(a=>'"'+((a||"").toString().replace(/"/gi,'""'))+'"').join(",")).join("\r\n"); //quote all fields, escape quotes by doubling them.
+                  var blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+                  var link = document.createElement("a");
+                  var url = URL.createObjectURL(blob);
+                  link.setAttribute("href", url);
+                  link.setAttribute("download", generalTitle.replace(/[^a-z0-9_.-]/gi,'_') + ".csv");
+                  link.style.visibility = 'hidden';
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+              } }],
+            }
+
             var data = [{
               type: "pie",
               values: xData,
@@ -733,51 +798,54 @@ const FeminicidiosPackage=(function(){
               },
             }
 
-            Plotly.newPlot('piegraph', data, layout)
+            Plotly.newPlot('piegraph', data, layout, config)
           }
 
           makeRowsTable = function(resp,x,tableBody){
-            let id_total = `${x}_total`;
-            let id_prom_an = `${x}_prom_an`;
-            let id_prom_month = `${x}_prom_m`;
-            let id_variacion = `${x}_variacion`;
-            let noData = "Sin Datos";
-            let index= resp['territory'].indexOf(x);
-            let total = resp['muertes'][index];
-            let prom_an = Math.round(resp['avg_years'][index]);
-            let prom_month = Math.round(resp['avg_months'][index]);
-            let variation = Math.round(resp['variation'][index]);
-            let variationWord;
-            let percentageX = (variation/total)*100;
+              let id_total = `${x}_total`;
+              let id_prom_an = `${x}_prom_an`;
+              let id_prom_month = `${x}_prom_m`;
+              let id_variacion = `${x}_variacion`;
+              let noData = "Sin Datos";
+              let index= resp['territory'].indexOf(x);
+              let total = resp['muertes'][index];
+              let prom_an = Math.round(resp['avg_years'][index]);
+              let prom_month = Math.round(resp['avg_months'][index]);
+              let variation = Math.round(resp['variation'][index]);
+              let variationWord;
+              let percentageX = (variation/total)*100;
 
-            if(percentageX >= 15){
-              variationWord="PROPORCIONADO"
-            }
-            if(percentageX < 15){
-              variationWord="DESPROPORCIONADO"
-            }
+              if(percentageX >= 15){
+                variationWord="PROPORCIONADO"
+              }
+              if(percentageX < 15){
+                variationWord="DESPROPORCIONADO"
+              }
 
-            let newRow;
-            if (x !== "Nacional"){
-              newRow=`<tr>
-                           <td class="departmentName">${x}</td>
-                           <td id="${id_total}" class="departmentDataRow">${total}</td>
-                           <td id= "${id_prom_an}" class="departmentDataRow">${prom_an}</td>
-                           <td id= "${id_prom_an}" class="departmentDataRow">${prom_month}</td>
-                          </tr>`
-            }
-            else{
-              newRow=`<tr>
-                           <td id="${id_total}">${total}</td>
-                           <td id= "${id_prom_an}">${prom_an}</td>
-                           <td id= "${id_prom_an}">${prom_month}</td>
-                           <td id="${id_variacion}">${variationWord}</td>
-                          </tr>`
-              console.log("this is PERCENTA");
-              console.log(percentageX);
-            }
+              let newRow;
+              if (x !== "Nacional"){
+                newRow=`<tr>
+                             <td class="departmentName">${x}</td>
+                             <td id="${id_total}" class="departmentDataRow">${total}</td>
+                             <td id= "${id_prom_an}" class="departmentDataRow">${prom_an}</td>
+                             <td id= "${id_prom_an}" class="departmentDataRow">${prom_month}</td>
+                            </tr>`
+              }
+              else{
+                newRow=`<tr>
+                             <td id="${id_total}">${total}</td>
+                             <td id= "${id_prom_an}">${prom_an}</td>
+                             <td id= "${id_prom_an}">${prom_month}</td>
+                             <td id="${id_variacion}">${variationWord}</td>
+                            </tr>`
+                console.log("this is PERCENTA");
+                console.log(percentageX);
+              }
 
-            tableBody = tableBody + newRow;
+              tableBody = tableBody + newRow;
+
+
+
             return tableBody;
           }
 
@@ -799,27 +867,265 @@ const FeminicidiosPackage=(function(){
 
                 let tableBody;
                 let tableBodyNacional;
-                resp['territory'].forEach(function(x){
-                  if(x  !== "Nacional"){
-                    tableBody = makeRowsTable(resp,x,tableBody);
+                console.log("resp[territory]");
+                console.log(resp['territory']);
+                if (resp['territory'].length == 0){
+                  tableBody="";
+                  tableBodyNacional="";
+                }
+                else{
+                  resp['territory'].forEach(function(x){
+                    if(x  !== "Nacional"){
+                      tableBody = makeRowsTable(resp,x,tableBody);
 
-                  }
-                  else{
-                    tableBodyNacional = makeRowsTable(resp,x,tableBodyNacional)
-                  }
-                })
+                    }
+                    else{
+                      tableBodyNacional = makeRowsTable(resp,x,tableBodyNacional);
+
+                    }
+                  })
+                }
                 resp['muertes'].pop();
                 resp['territory'].pop();
+                $("#piegraph").empty();
+                $("#bigStats").show();
+                $("#pieStats").show();
+
                 graph_pie_template(resp['muertes'],resp['territory'],`Distribucion de Feminicidios-${territory}`)
-                $("#table_body_regions").html(tableBody);
-                $("#table_body_regions_nacional").html(tableBodyNacional);
+                if(tableBody !== "" || tableBodyNacional !== ""){
+                  $("#table_body_regions").html(tableBody);
+                  $("#table_body_regions_nacional").html(tableBodyNacional);
+                }
+                else{
+                  $("#pieStats").hide();
+                  $("#bigStats").hide();
+                  // $("#table_body_regions").empty();
+                  // $("#table_body_regions_nacional").empty();
+                  // $("#noData").html(`<p>No hay Datos para el departamento seleccionado</p>
+                  //   <img src="/static/PrevencionTool/images/nodata3.png" alt="">`);
+                  //  document.getElementById("noData").style.display = "inline";
+                  $("#piegraph").empty();
+                  $("#piegraph").html(`<p>No hay Datos nececarios para graficos para el departamento seleccionado</p>
+                    <img src="/static/PrevencionTool/images/nodata2.png" alt="">`);
+
+                }
 
               }
             })
           }
+          /*
+            ****** FU1NCTION NAME: addDefaultBehaviorToAjax *********
+            ****** FUNCTION PURPOSE: make dynamic ajax requests *********
+            */
+            addDefaultBehaviorToAjax = function() {
+                // Add CSRF token to appropriate ajax requests
+                $.ajaxSetup({
+                    beforeSend: function(xhr, settings) {
+                        if (!checkCsrfSafe(settings.type) && !this.crossDomain) {
+                            xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"))
+                        }
+                    }
+                })
+            }
+            /*
+            ****** FU1NCTION NAME: checkCsrfSafe *********
+            ****** FUNCTION PURPOSE: CHECK THE OPERATIONS THAT DOES NOT NEED A CSRF VERIFICATION *********
+            */
+            checkCsrfSafe = function(method) {
+                // these HTTP methods do not require CSRF protection
+                return /^(GET|HEAD|OPTIONS|TRACE)$/.test(method)
+            }
+            /*
+            ****** FU1NCTION NAME: getCookie *********
+            ****** FUNCTION PURPOSE: Retrieve a cookie value from the csrf token *********
+            */
+            getCookie = function(name) {
+                console.log("i am here crfs");
+                var cookie
+                var cookies
+                var cookieValue = null
+                var i
+                if (document.cookie && document.cookie !== "") {
+                    cookies = document.cookie.split(";")
+                    for (i = 0; i < cookies.length; i += 1) {
+                        cookie = $.trim(cookies[i])
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === name + "=") {
+                            cookieValue = decodeURIComponent(
+                                cookie.substring(name.length + 1)
+                            )
+                            break
+                        }
+                    }
+                }
+                return cookieValue
+            }
+
+            addNewCaseActive = function(){
+              let nombreCompletoAdd = document.getElementById("completeName").value;
+              let direccionFeminicidioAdd = document.getElementById("AddressFeminicidio").value;
+              let departmentAdd = document.getElementById("departmentList2").value;
+              let provinceAdd = document.getElementById("provinceList2").value;
+              let geolocalizacionAdd= caseToAddGeolocalizacion;
+              let edadAdd= document.getElementById("edadVictima").value;
+              let numeroHijosAdd= document.getElementById("NumeroDeHijos").value;
+              let fechaArray = PICKER.dateSelected.toISOString().split("T")[0].split("-");
+              let fechaAgresionAdd = [fechaArray[2],fechaArray[1],fechaArray[0]].join("-");
+              // console.log(fechaAgresionAdd);
+              let agresionPreviaAdd= document.getElementById("AgressionPrevia").value;
+              let causaMuerteAdd= document.getElementById("CausaMuerte").value;
+              let estadoDelCasoAdd= document.getElementById("EstadoDelCaso").value;
+              let circunstaciasFeminicidioAdd= document.getElementById("CircunstaciasFeminicidio").value;
+              let requestObject={
+                nombre:nombreCompletoAdd,
+                dirreccion:direccionFeminicidioAdd,
+                departamento:departmentAdd,
+                provincia:provinceAdd,
+                geolocalizacion:geolocalizacionAdd,
+                edad: edadAdd,
+                hijos:numeroHijosAdd,
+                fecha: fechaAgresionAdd,
+                agresion:agresionPreviaAdd,
+                causaMuerte:causaMuerteAdd,
+                estadoDelCaso:estadoDelCasoAdd,
+                circunstancia: circunstaciasFeminicidioAdd
+              }
+
+              console.log(requestObject);
+              $.ajax({
+                    type: 'POST',
+                    url: 'add-feminicidio/',
+                    data: requestObject,
+                    success: function(result) {
+                      console.log("this is the response");
+                      console.log(result);
+
+                      if (result === "Feminicidio was added succesfully"){
+                        console.log("we are successfull");
+                        let lat=requestObject['geolocalizacion'].split(',')[0];
+                        let long=requestObject['geolocalizacion'].split(',')[1];
+                        let point=[];
+                        let template = '<h3>'+ requestObject['nombre'] +'</h3>\
+                            <table class="table table-hover table-sm table-dark popup-table" id="tableID">\
+                              <tr class="popup-table-row">\
+                                <th class="popup-table-header"> Año </th>\
+                                <td id="value-ano" class="popup-table-data">'+requestObject['fecha'].split('-')[0]+'</td>\
+                              </tr>\
+                              <tr class="popup-table-row">\
+                                <th class="popup-table-header">Mes Muerte:</th>\
+                                <td id="value-mes" class="popup-table-data">'+requestObject['fecha'].split('-')[1]+'</td>\
+                              </tr>\
+                              <tr class="popup-table-row">\
+                                <th class="popup-table-header"> Fecha: </th>\
+                                <td id="value-fecha" class="popup-table-data">'+requestObject['fecha']+'</td>\
+                              </tr>\
+                              <tr class="popup-table-row">\
+                                <th class="popup-table-header">Departamento: </th>\
+                                <td id="value-departmento" class="popup-table-data">'+requestObject['departamento']+'</td>\
+                              </tr>\
+                              <tr class="popup-table-row">\
+                                <th class="popup-table-header"> Edad: </th>\
+                                <td id="value-edad" class="popup-table-data">'+requestObject['edad']+'</td>\
+                              </tr>\
+                              <tr class="popup-table-row">\
+                                <th class="popup-table-header">Agresion Previa: </th>\
+                                <td id="value-agresion_previa" class="popup-table-data">'+requestObject['agresion']+'</td>\
+                              </tr>\
+                              <tr class="popup-table-row">\
+                                <th class="popup-table-header">Estado del Caso: </th>\
+                                <td id="value-estado_del_caso" class="popup-table-data">'+requestObject['estadoDelCaso']+'</td>\
+                              </tr>\
+                            </table>\
+                            <p><strong>Circunstacias del Feminicidio</strong><p>'+requestObject['circunstancia'];
+                        if(lat != "No se sabe" && long!="No se sabe"){
+                          point.push(parseFloat(lat));
+                          point.push(parseFloat(long));
+                          let marker=L.marker(point,{icon:womenIcon}).addTo(map);
+                          marker.bindPopup(template);
+                        }
+                        //update the graphs //
+                        let territory = document.getElementById("departmentList").value;
+                        makegraph(territory);
+                        makePieGrap(territory);
+                      }
+
+                    }
+              })
+            }
+            $("#addNewCase").on("click", addNewCaseActive);
+            searchCase = function(){
+              let regionSearch = document.getElementById("departmentList3").value;
+              let subRegionSearch = document.getElementById("provinceList3").value;
+              let requestObject = {};
+              requestObject['region'] = regionSearch;
+              requestObject['subregion'] = subRegionSearch;
+              $.ajax({
+                    type: 'GET',
+                    url: 'search-feminicidio/',
+                    data: requestObject,
+                    success: function(result) {
+                      console.log("this is the search");
+                      console.log(result);
+
+                      // if (result === "Feminicidio was added succesfully"){
+                      //   console.log("we are successfull");
+                      //   let lat=requestObject['geolocalizacion'].split(',')[0];
+                      //   let long=requestObject['geolocalizacion'].split(',')[1];
+                      //   let point=[];
+                      //   let template = '<h3>'+ requestObject['nombre'] +'</h3>\
+                      //       <table class="table table-hover table-sm table-dark popup-table" id="tableID">\
+                      //         <tr class="popup-table-row">\
+                      //           <th class="popup-table-header"> Año </th>\
+                      //           <td id="value-ano" class="popup-table-data">'+requestObject['fecha'].split('-')[0]+'</td>\
+                      //         </tr>\
+                      //         <tr class="popup-table-row">\
+                      //           <th class="popup-table-header">Mes Muerte:</th>\
+                      //           <td id="value-mes" class="popup-table-data">'+requestObject['fecha'].split('-')[1]+'</td>\
+                      //         </tr>\
+                      //         <tr class="popup-table-row">\
+                      //           <th class="popup-table-header"> Fecha: </th>\
+                      //           <td id="value-fecha" class="popup-table-data">'+requestObject['fecha']+'</td>\
+                      //         </tr>\
+                      //         <tr class="popup-table-row">\
+                      //           <th class="popup-table-header">Departamento: </th>\
+                      //           <td id="value-departmento" class="popup-table-data">'+requestObject['departamento']+'</td>\
+                      //         </tr>\
+                      //         <tr class="popup-table-row">\
+                      //           <th class="popup-table-header"> Edad: </th>\
+                      //           <td id="value-edad" class="popup-table-data">'+requestObject['edad']+'</td>\
+                      //         </tr>\
+                      //         <tr class="popup-table-row">\
+                      //           <th class="popup-table-header">Agresion Previa: </th>\
+                      //           <td id="value-agresion_previa" class="popup-table-data">'+requestObject['agresion']+'</td>\
+                      //         </tr>\
+                      //         <tr class="popup-table-row">\
+                      //           <th class="popup-table-header">Estado del Caso: </th>\
+                      //           <td id="value-estado_del_caso" class="popup-table-data">'+requestObject['estadoDelCaso']+'</td>\
+                      //         </tr>\
+                      //       </table>\
+                      //       <p><strong>Circunstacias del Feminicidio</strong><p>'+requestObject['circunstancia'];
+                      //   if(lat != "No se sabe" && long!="No se sabe"){
+                      //     point.push(parseFloat(lat));
+                      //     point.push(parseFloat(long));
+                      //     let marker=L.marker(point,{icon:womenIcon}).addTo(map);
+                      //     marker.bindPopup(template);
+                      //   }
+                      //   //update the graphs //
+                      //   let territory = document.getElementById("departmentList").value;
+                      //   makegraph(territory);
+                      //   makePieGrap(territory);
+                      // }
+
+                    }
+              })
+
+            }
+            $("#searchCase").on("click", searchCase);
 
 
           initialize= function(){
+            addDefaultBehaviorToAjax();
+
             init_variables();
             init_map();
             init_side();

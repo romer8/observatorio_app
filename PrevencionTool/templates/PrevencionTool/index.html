@@ -70,7 +70,7 @@ crossorigin=""></script>
       border-bottom: 2em solid #78be20;
     }
     #brand img{
-      flex: 1 1 30%;
+      flex: 1 1 0%;
       width:50%;
       height: 50%;
     }
@@ -129,7 +129,23 @@ crossorigin=""></script>
       flex: 1 1 70%;
       width: 100%;
       height: 100%;
+      font-weight: bold;
     }
+    #noDataGraph{
+      color:#78be20;
+      font-weight: bold;
+      font-size: 1.5em;
+      display:flex;
+      flex-direction:column;
+      align-items: center;
+      justify-content:center;
+      margin-top:5%;
+    }
+    #noDataGraph img{
+      width:10%;
+      height:10%;
+    }
+
     #pieStats{
       /* color: #78be20;
       background-color: #1f3150; */
@@ -201,6 +217,15 @@ crossorigin=""></script>
       width: 100%;
       height: 100%;
     }
+    #noData,#piegraph{
+      color:#78be20;
+      font-weight:bold;
+      font-size: 1.5em;
+    }
+    #piegraph img #noData img{
+      width:50%;
+      height:50%;
+    }
 
 
     </style>
@@ -210,7 +235,7 @@ crossorigin=""></script>
       <div id="header">
         <div id="brand">
           <img src="{% static 'PrevencionTool/images/feminicidio_logo.png' %}" alt="">
-          <p> VISUALIZADOR FEMINICIDIOS</p>
+          <p> OBSERVADOR FEMINICIDIOS</p>
         </div>
         <div id="sideSmall">
           <h2>Panel de Control</h2>
@@ -219,13 +244,12 @@ crossorigin=""></script>
               <i class="fa fa-plus" aria-hidden="true"></i>
             </button>
             <button type="button" id= "deleteCase" class="btn btn-dark" data-toggle="modal" data-target="#DeleteCaseModal">
-              <i class="fa fa-trash" aria-hidden="true"></i>
+              <i class="fa fa-search" aria-hidden="true"></i>
             </button>
           </div>
-
-
           <select id='departmentList'> </select> <br>
-          <table class="table table-hover table-sm table-dark">
+          <select id='provsList' style="display: none;"> </select> <br>
+          <table id="bigStats" class="table table-hover table-sm table-dark">
             <thead>
               <tr class="header_table">
                 <th scope="col">Total Feminicidios</th>
@@ -256,9 +280,10 @@ crossorigin=""></script>
                 </tr>
               </thead>
               <tbody id="table_body_regions">
-
               </tbody>
             </table>
+            <div id="noData" style="display: none;"></div>
+
           </div>
         </div>
 
@@ -267,7 +292,7 @@ crossorigin=""></script>
           <div id="map"></div>
           <!-- <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel"> -->
           <div id="graph">
-            <div id="tsStats">
+            <!-- <div id="tsStats">
               <table class="table table-hover table-sm">
                 <thead>
                   <tr>
@@ -297,7 +322,7 @@ crossorigin=""></script>
                   </tr>
                 </tbody>
               </table>
-             </div>
+             </div> -->
              <div id="graphts">
              </div>
           </div>
