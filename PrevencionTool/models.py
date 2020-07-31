@@ -18,6 +18,22 @@ class Victima(models.Model):
     situacion_del_presunto_autor=models.CharField(max_length=100, default="nada")
     numero_hijos=models.CharField(max_length=50)
 
+    # situacion_del_presunto_autor=models.TextField()
+    # sentencia = models.TextField()
+    # lat=models.CharField(max_length=50)
+    # lng=models.CharField(max_length=50)
+    # estado_del_caso=models.CharField(max_length=50, default="nada")
+    # situacion_del_presunto_autor=models.CharField(max_length=100, default="nada")
+    # observaciones = models.TextField()
+    # enlaces_originales = models.TextField()
+    # enlaces_validos = models.TextField()
+    # detalles_relacion_victima = models.TextField()
+    # relacion_victima = models.TextField()
+    # detalles_agresion_previa = models.TextField()
+    # detalles_agresion_mortal =models.TextField()
+    # estado_alcoholico = models.CharField(max_length=50)
+    # intento_suicido = models.CharField(max_length=50)
+
     class Meta:
         db_table="victima"
 
