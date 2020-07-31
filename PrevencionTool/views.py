@@ -12,74 +12,76 @@ import plotly.graph_objs as go
 # def index(request):
 #     return HttpResponse("Hello, world. You're at the polls index.")
 def feminicidios_data():
-    Victima.objects.all().delete()
-    Agresor.objects.all().delete()
-    # array=[]
-    count=0
-    csv_path="PrevencionTool/static/PrevencionTool/scripts/Bol_Feminicidio 2013-16.csv"
-    with open(csv_path, newline='') as csvfile:
-        spamreader = csv.reader(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, skipinitialspace=True)
-        print('Loading...')
-        for row in spamreader:
-            count=count+1
-            ano_victima=row[0]
-            mes_victima = row[1]
-            fecha_victima = row[2]
-            nombre_victima = row[3]
-            edad_victima=row[4]
-            lugar_victima=row[5]
-            provincia_victima=row[6]
-            departamento_victima=row[7]
-            geolocalizacion_victima=row[8]
-            circunstancias_victima=row[9]
-            agresion_previa_victima=row[10]
-            causa_muerte_victima=row[11]
-            numero_hijos_victima=row[22]
+    if not Victima.objects.all():
+        print("here")
+        Victima.objects.all().delete()
+        Agresor.objects.all().delete()
+        # array=[]
+        count=0
+        csv_path="PrevencionTool/static/PrevencionTool/scripts/Bol_Feminicidio 2013-16.csv"
+        with open(csv_path, newline='') as csvfile:
+            spamreader = csv.reader(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_ALL, skipinitialspace=True)
+            print('Loading...')
+            for row in spamreader:
+                count=count+1
+                ano_victima=row[0]
+                mes_victima = row[1]
+                fecha_victima = row[2]
+                nombre_victima = row[3]
+                edad_victima=row[4]
+                lugar_victima=row[5]
+                provincia_victima=row[6]
+                departamento_victima=row[7]
+                geolocalizacion_victima=row[8]
+                circunstancias_victima=row[9]
+                agresion_previa_victima=row[10]
+                causa_muerte_victima=row[11]
+                numero_hijos_victima=row[22]
 
-            estado_del_caso=row[17]
-            situacion_del_presunto_autor=row[18]
+                estado_del_caso=row[17]
+                situacion_del_presunto_autor=row[18]
 
-            nombre_acusado=row[12]
-            edad_acusado=row[13]
-            temperancia=row[14]
-            intento_suicidio=row[15]
-            relacion_victima=row[16]
-            sentencia=row[19]
-            fecha_sentencia=row[20]
+                nombre_acusado=row[12]
+                edad_acusado=row[13]
+                temperancia=row[14]
+                intento_suicidio=row[15]
+                relacion_victima=row[16]
+                sentencia=row[19]
+                fecha_sentencia=row[20]
 
-            victima_row = Victima(
-                ano=ano_victima,
-                mes=mes_victima,
-                fecha=fecha_victima,
-                nombre=nombre_victima,
-                edad=edad_victima,
-                lugar=lugar_victima,
-                provincia=provincia_victima,
-                departamento=departamento_victima,
-                geolocalizacion=geolocalizacion_victima,
-                circunstancias=circunstancias_victima,
-                agresion_previa=agresion_previa_victima,
-                estado_del_caso=estado_del_caso,
-                causa_muerte=causa_muerte_victima,
-                numero_hijos=numero_hijos_victima
-            )
-            agresor_row=Agresor(
-                ano=ano_victima,
-                mes=mes_victima,
-                fecha=fecha_victima,
-                nombre_victima=nombre_victima,
-                nombre_acusado=nombre_acusado,
-                edad_acusado=edad_acusado,
-                temperancia=temperancia,
-                intento_suicidio=intento_suicidio,
-                relacion_victima=relacion_victima,
-                estado_del_caso=estado_del_caso,
-                situacion_del_presunto_autor=situacion_del_presunto_autor,
-                sentencia=sentencia,
-                fecha_sentencia=fecha_sentencia
-            )
-            victima_row.save()
-            agresor_row.save()
+                victima_row = Victima(
+                    ano=ano_victima,
+                    mes=mes_victima,
+                    fecha=fecha_victima,
+                    nombre=nombre_victima,
+                    edad=edad_victima,
+                    lugar=lugar_victima,
+                    provincia=provincia_victima,
+                    departamento=departamento_victima,
+                    geolocalizacion=geolocalizacion_victima,
+                    circunstancias=circunstancias_victima,
+                    agresion_previa=agresion_previa_victima,
+                    estado_del_caso=estado_del_caso,
+                    causa_muerte=causa_muerte_victima,
+                    numero_hijos=numero_hijos_victima
+                )
+                agresor_row=Agresor(
+                    ano=ano_victima,
+                    mes=mes_victima,
+                    fecha=fecha_victima,
+                    nombre_victima=nombre_victima,
+                    nombre_acusado=nombre_acusado,
+                    edad_acusado=edad_acusado,
+                    temperancia=temperancia,
+                    intento_suicidio=intento_suicidio,
+                    relacion_victima=relacion_victima,
+                    estado_del_caso=estado_del_caso,
+                    situacion_del_presunto_autor=situacion_del_presunto_autor,
+                    sentencia=sentencia,
+                    fecha_sentencia=fecha_sentencia
+                )
+                victima_row.save()
+                agresor_row.save()
     return
 
 def getTableVictimaData():

@@ -8,6 +8,6 @@ urlpatterns = [
     path('', views.default_map, name='default'),
     path('local-graph/', views.localGraphs),
     path('local-pie-graph/', views.localPieGraphs),
-    path('add-feminicidio/', views.addFeminicidioCase),
-    path('search-feminicidio/', views.searchFeminicidioCase),
+    # path('add-feminicidio/', views.addFeminicidioCase),
+    # path('search-feminicidio/', views.searchFeminicidioCase),
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
